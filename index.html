@@ -452,11 +452,11 @@ body.midnight .wish-item { background:rgba(26,58,107,0.3); }
     <div class="garden-canvas-wrap" id="gardenWrap">
       <canvas id="gardenCanvas"></canvas>
     </div>
-    <p class="garden-hint" id="gardenHint">🚿 siram bunga mawarnya! klik / sentuh & gerakkan</p>
+    <p class="garden-hint" id="gardenHint">🚿 siram rosesnya plis! klik / sentuh & gerakkan</p>
     <div class="celebration-banner" id="celebBanner">
-      <div class="cel-title">100 mawar mekar semua! 🌹✨</div>
+      <div class="cel-title">All 100 roses are in full bloom! 🌹✨</div>
       <p style="font-family:'Caveat',cursive;font-size:clamp(0.95rem,2.5vw,1.1rem);color:#1d4ed8;transition:color var(--transition-dur)" id="celebSubText">
-        seperti vellycia — indah, lembut, dan bikin dunia lebih berwarna 💙
+        seperti vellycia — pretty, sweet, dan gorgeous 💙
       </p>
     </div>
     <button id="letter-unlock-btn" onclick="openLetter()">
@@ -638,13 +638,22 @@ function toggleMidnight(){
 // ═══════════════════════════════════════
 const now0=new Date();
 let target=new Date('2025-04-09T00:00:00');
-if(now0>=target) target=new Date('2026-04-09T00:00:00');
+if(now0>=target) target=new Date('2026-03-11T19:10:00');
 const pad=n=>String(n).padStart(2,'0');
 function popNum(el){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');setTimeout(()=>el.classList.remove('pop'),280);}
 let prevSec=-1;
+let transitioned=false;
+let countdownInterval=null;
 function tick(){
   const diff=target-new Date();
-  if(diff<=0){startCurtainTransition();return;}
+  if(diff<=0){
+    if(!transitioned){
+      transitioned=true;
+      clearInterval(countdownInterval);
+      startCurtainTransition();
+    }
+    return;
+  }
   const t=Math.floor(diff/1000);
   $('cd-days').textContent=pad(Math.floor(t/86400));
   $('cd-hours').textContent=pad(Math.floor((t%86400)/3600));
@@ -652,7 +661,7 @@ function tick(){
   const s=t%60;
   if(s!==prevSec){$('cd-secs').textContent=pad(s);popNum($('cd-secs'));prevSec=s;}
 }
-tick(); setInterval(tick,1000);
+tick(); countdownInterval=setInterval(tick,1000);
 
 // ═══════════════════════════════════════
 // 🎭 CURTAIN TRANSITION
@@ -733,7 +742,7 @@ function startTypewriter(){
 // ═══════════════════════════════════════
 // 💌 HIDDEN LETTER
 // ═══════════════════════════════════════
-const letterContent=`Vel,\n\nkamu udah nyiram 100 mawar.\nitu bukan kebetulan — itu kamu.\nkamu yang penuh perhatian, yang sabar, yang nggak pernah nyerah.\n\nhari ini, 9 april, aku mau bilang sesuatu yang mungkin belum pernah aku bilang langsung:\n\nterima kasih udah ada. beneran.\nbukan karena kamu sempurna — tapi justru karena kamu kamu. dengan semua lelahmu, semua crymu, semua "gua ud ga bisa"-mu.\n\nkamu kuat tanpa sadar, vel. dan itu salah satu hal paling indah yang pernah aku lihat.\n\nselamat ulang tahun. semoga tahun ini jauh lebih ringan, jauh lebih bahagia, dan penuh hal-hal yang bikin kamu senyum tanpa alasan.\n\nu deserve it all. every single bit of it. 💙`;
+const letterContent=`bocill,\n have watered 100 roses.\nthats no coincidence — thats u.\nu are the one who is attentive, patient, and never gives up.\n\ntoday, 9 april, i want to say something that I might have never said directly:\n\nthanks for existing. truly.\nnot cz u're perfect(but ik u = perfect) — but precisely because u are u. With all ur exhaustion, all ur cries, and all ur "i can't do this anymore" moments.\n\nu strong without realizing it, velly. and thats one of the most beautiful things ive ever seen.\n\nhappy birthday. i hope this year is much lighter, much happier, and full of things that make u smile for no reason yaa.\n\nu deserve it all. every single bit of it. 💙`;
 
 let letterTyping=false;
 
@@ -763,7 +772,7 @@ function typeLetter(){
   function typeNextParagraph(){
     if(pIdx>=paragraphs.length){
       // sign
-      const signText='— seseorang yang peduli sama kamu 💙';
+      const signText='— someone who cares about you 💙';
       let si=0;
       const signInterval=setInterval(()=>{
         sign.textContent+=signText[si++];
