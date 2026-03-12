@@ -1344,7 +1344,7 @@ function toggleMidnight(){
 // ═══════════════════════════════════════
 const now0=new Date();
 let target=new Date('2025-04-09T00:00:00');
-if(now0>=target) target=new Date('2026-04-12T12:23:00');
+if(now0>=target) target=new Date('2026-04-09T00:00:00');
 const pad=n=>String(n).padStart(2,'0');
 function popNum(el){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');setTimeout(()=>el.classList.remove('pop'),280);}
 let prevSec=-1;
