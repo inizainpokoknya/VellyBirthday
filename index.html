@@ -142,42 +142,212 @@ canvas#starfield { position:fixed; inset:0; z-index:1; pointer-events:none; }
   transition:background var(--transition-dur), color var(--transition-dur);
 }
 
-/* ── AUDIO PLAYER ── */
-#audio-bar {
-  position:fixed; bottom:16px; left:50%; transform:translateX(-50%);
-  z-index:8000; display:flex; align-items:center; gap:10px;
-  background:var(--card); border:1.5px solid var(--border);
-  border-radius:50px; padding:8px 18px;
-  backdrop-filter:blur(20px);
-  box-shadow:0 4px 20px rgba(59,130,246,0.15);
-  transition:background var(--transition-dur), border var(--transition-dur);
-  cursor:pointer; user-select:none;
+/* ══════════════════════════════════════
+   VINYL RECORD PLAYER
+══════════════════════════════════════ */
+#vinyl-player {
+  position:fixed;
+  bottom:20px; right:20px;
+  z-index:8000;
+  width:200px;
+  user-select:none;
+  filter:drop-shadow(0 8px 32px rgba(30,58,138,0.35));
+  transition:transform 0.3s cubic-bezier(.22,1,.36,1), filter 0.3s;
 }
-#audio-bar:hover { box-shadow:0 6px 28px rgba(59,130,246,0.25); }
-#audio-btn {
-  width:32px; height:32px; border-radius:50%;
-  background:linear-gradient(135deg,var(--blue2),var(--blue3));
-  border:none; color:white; font-size:0.9rem; cursor:pointer;
+#vinyl-player:hover {
+  transform:scale(1.06);
+  filter:drop-shadow(0 12px 40px rgba(30,58,138,0.5));
+}
+@media(max-width:480px){
+  #vinyl-player { width:160px; bottom:14px; right:14px; }
+}
+
+/* ── Cabinet / base ── */
+#vinyl-cabinet {
+  background:linear-gradient(160deg,#1a2744,#0d1428);
+  border-radius:20px;
+  padding:14px 14px 12px;
+  border:1.5px solid rgba(96,165,250,0.25);
+  box-shadow:0 4px 24px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.06) inset;
+  position:relative;
+}
+body.midnight #vinyl-cabinet {
+  border-color:rgba(96,165,250,0.4);
+  box-shadow:0 4px 32px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.06) inset;
+}
+
+/* ── Platter area ── */
+#vinyl-platter-wrap {
+  position:relative;
+  width:100%;
+  padding-bottom:100%; /* square */
+  margin-bottom:10px;
+}
+
+/* ── Vinyl disc ── */
+#vinyl-disc {
+  position:absolute; inset:0;
+  border-radius:50%;
+  cursor:pointer;
+  animation:vinylRotate 2.2s linear infinite;
+  animation-play-state:paused;
+  will-change:transform;
+  /* Grooves via repeating radial gradient */
+  background:
+    radial-gradient(circle at 50% 50%, #111 0%, #111 16%,
+      transparent 16.5%, transparent 17%,
+      rgba(255,255,255,0.03) 17%, rgba(255,255,255,0.03) 17.4%,
+      transparent 17.5%),
+    repeating-radial-gradient(circle at 50% 50%,
+      #1a1a1a 0%, #222 1.5%, #181818 3%, #232323 4.5%, #1a1a1a 6%),
+    radial-gradient(circle at 38% 32%, rgba(255,255,255,0.07) 0%, transparent 55%);
+  box-shadow:
+    0 0 0 3px #111,
+    0 0 0 5px rgba(255,255,255,0.04),
+    inset 0 2px 12px rgba(0,0,0,0.8);
+}
+@keyframes vinylRotate {
+  from { transform:rotate(0deg); }
+  to   { transform:rotate(360deg); }
+}
+
+/* ── Glossy highlight on vinyl ── */
+#vinyl-disc::before {
+  content:'';
+  position:absolute; inset:0; border-radius:50%;
+  background:radial-gradient(ellipse at 30% 28%,
+    rgba(255,255,255,0.13) 0%,
+    rgba(255,255,255,0.04) 35%,
+    transparent 65%);
+  pointer-events:none;
+}
+
+/* ── Center label (album art) ── */
+#vinyl-label {
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  width:42%; height:42%;
+  border-radius:50%;
+  overflow:hidden;
+  border:2.5px solid rgba(255,255,255,0.15);
+  box-shadow:0 0 0 1px rgba(0,0,0,0.6), 0 2px 10px rgba(0,0,0,0.7);
+  pointer-events:none;
+}
+#vinyl-label img {
+  width:100%; height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+/* ── Center spindle hole ── */
+#vinyl-spindle {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  width:5%; height:5%;
+  border-radius:50%;
+  background:radial-gradient(circle,#444,#1a1a1a);
+  border:1px solid rgba(255,255,255,0.1);
+  pointer-events:none;
+  z-index:2;
+}
+
+/* ── Tonearm assembly ── */
+#tonearm-svg {
+  position:absolute;
+  top:-4%; right:-6%;
+  width:52%; height:52%;
+  pointer-events:none;
+  transform-origin:82% 14%;
+  /* resting position (off record) */
+  transform:rotate(20deg);
+  transition:transform 1.4s cubic-bezier(.4,0,.2,1);
+  z-index:5;
+}
+#tonearm-svg.playing {
+  /* needle on groove (~33°) */
+  transform:rotate(6deg);
+}
+
+/* ── Controls row ── */
+#vinyl-controls {
+  display:flex; align-items:center; gap:8px;
+  padding:0 2px;
+}
+#vinyl-play-btn {
+  width:30px; height:30px; border-radius:50%; flex-shrink:0;
+  background:linear-gradient(135deg,#2563eb,#60a5fa);
+  border:none; color:#fff; font-size:0.7rem; cursor:pointer;
   display:flex; align-items:center; justify-content:center;
-  box-shadow:0 2px 10px rgba(37,99,235,0.35);
-  transition:transform 0.2s;
+  box-shadow:0 2px 10px rgba(37,99,235,0.5);
+  transition:transform 0.2s, box-shadow 0.2s;
 }
-#audio-btn:hover { transform:scale(1.1); }
-.audio-label {
-  font-family:'Caveat',cursive; font-size:0.95rem; color:var(--blue2);
-  white-space:nowrap; max-width:180px; overflow:hidden; text-overflow:ellipsis;
+#vinyl-play-btn:hover { transform:scale(1.12); box-shadow:0 4px 18px rgba(37,99,235,0.7); }
+#vinyl-play-btn:active { transform:scale(0.95); }
+.vinyl-track-info {
+  flex:1; overflow:hidden;
 }
-.audio-note-anim {
-  font-size:1rem;
-  animation:noteFloat 1.5s ease-in-out infinite;
+.vinyl-song-title {
+  font-family:'Caveat',cursive;
+  font-size:0.72rem; font-weight:700;
+  color:#bfdbfe;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  display:block;
 }
-@keyframes noteFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
-.audio-vinyl {
-  font-size:1.1rem;
-  animation:vinylSpin 3s linear infinite;
+.vinyl-song-artist {
+  font-family:'Caveat',cursive;
+  font-size:0.62rem;
+  color:rgba(147,197,253,0.7);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  display:block;
 }
-@keyframes vinylSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-#audio-vinyl-stop { animation-play-state:paused; }
+/* Scrolling marquee for long titles */
+@keyframes marquee {
+  0%   { transform:translateX(0); }
+  20%  { transform:translateX(0); }
+  80%  { transform:translateX(var(--overflow)); }
+  100% { transform:translateX(var(--overflow)); }
+}
+/* Volume slider */
+#vinyl-volume {
+  -webkit-appearance:none;
+  appearance:none;
+  width:100%; height:3px;
+  border-radius:3px;
+  background:linear-gradient(90deg,#2563eb var(--vol,45%),rgba(255,255,255,0.15) var(--vol,45%));
+  outline:none; cursor:pointer;
+  margin-top:6px;
+}
+#vinyl-volume::-webkit-slider-thumb {
+  -webkit-appearance:none;
+  width:10px; height:10px;
+  border-radius:50%;
+  background:#60a5fa;
+  box-shadow:0 1px 4px rgba(0,0,0,0.5);
+  cursor:pointer;
+}
+#vinyl-volume::-moz-range-thumb {
+  width:10px; height:10px;
+  border-radius:50%; border:none;
+  background:#60a5fa;
+  cursor:pointer;
+}
+/* Note floating animation (playing indicator) */
+.vinyl-note {
+  position:absolute; top:-8px; left:50%;
+  font-size:0.75rem;
+  animation:noteRise 1.8s ease-out infinite;
+  pointer-events:none;
+}
+.vinyl-note:nth-child(2){ animation-delay:0.6s; left:30%; }
+.vinyl-note:nth-child(3){ animation-delay:1.2s; left:70%; }
+@keyframes noteRise {
+  0%   { opacity:0; transform:translateY(0) scale(0.8); }
+  20%  { opacity:1; }
+  100% { opacity:0; transform:translateY(-40px) scale(1.1); }
+}
+#vinyl-notes { display:none; }
+#vinyl-notes.playing { display:block; }
 
 /* ── BIRTHDAY PAGE ── */
 #birthday-page {
@@ -264,75 +434,6 @@ body.midnight .wish-item { background:rgba(26,58,107,0.3); }
 .bday-footer { text-align:center; font-family:'Caveat',cursive; font-size:clamp(1rem,3vw,1.15rem); color:var(--blue2); margin-top:4px; transition:color var(--transition-dur); }
 .divider { width:50px; height:3px; background:linear-gradient(90deg,transparent,var(--blue4),transparent); border-radius:3px; margin:12px auto; }
 
-/* ══════════════════════════════════
-   HIDDEN LETTER MODAL
-══════════════════════════════════ */
-#letter-overlay {
-  position:fixed; inset:0; z-index:8500;
-  display:none; align-items:center; justify-content:center;
-  padding:20px; background:rgba(10,22,40,0.6);
-  backdrop-filter:blur(10px);
-  animation:fadeIn 0.6s ease forwards;
-}
-#letter-overlay.show { display:flex; }
-@keyframes fadeIn { from{opacity:0} to{opacity:1} }
-.letter-paper {
-  background:linear-gradient(160deg,#fffdf7,#fff8f0);
-  border-radius:20px; max-width:480px; width:100%;
-  padding:32px 28px; position:relative;
-  box-shadow:0 20px 80px rgba(0,0,0,0.3),0 4px 20px rgba(59,130,246,0.15);
-  animation:letterAppear 0.7s cubic-bezier(.22,1,.36,1) forwards;
-  max-height:85vh; overflow-y:auto;
-}
-@keyframes letterAppear { from{transform:scale(0.7)rotate(-3deg);opacity:0} to{transform:scale(1)rotate(0deg);opacity:1} }
-.letter-header {
-  text-align:center; margin-bottom:20px;
-}
-.letter-seal {
-  font-size:2.5rem; display:block; margin-bottom:8px;
-  animation:sealPulse 2s ease-in-out infinite;
-}
-@keyframes sealPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
-.letter-title {
-  font-family:'Caveat',cursive; font-size:1.7rem; font-weight:800;
-  color:#1d4ed8; margin-bottom:4px;
-}
-.letter-from { font-family:'Caveat',cursive; font-size:1rem; color:#64748b; }
-.letter-divider { width:50px; height:2px; background:linear-gradient(90deg,transparent,#93c5fd,transparent); margin:14px auto; border-radius:2px; }
-.letter-body {
-  font-family:'Caveat',cursive; font-size:clamp(1.15rem,3vw,1.35rem);
-  color:#1e3a5f; line-height:1.8; font-weight:600; text-align:left;
-}
-.letter-body p { margin-bottom:14px; }
-.letter-sign { text-align:right; font-family:'Caveat',cursive; font-size:1.2rem; color:#2563eb; margin-top:18px; }
-.letter-close-btn {
-  position:absolute; top:14px; right:16px;
-  background:none; border:none; font-size:1.3rem; cursor:pointer; color:#94a3b8;
-  line-height:1; padding:4px 8px; border-radius:8px; transition:background 0.2s;
-}
-.letter-close-btn:hover { background:rgba(0,0,0,0.06); }
-.letter-open-btn {
-  display:block; margin:12px auto 0;
-  background:linear-gradient(135deg,#2563eb,#1d4ed8);
-  color:white; border:none; border-radius:50px; padding:12px 28px;
-  font-family:'Caveat',cursive; font-size:1.15rem; font-weight:700;
-  cursor:pointer; box-shadow:0 4px 16px rgba(37,99,235,0.35);
-  transition:transform 0.2s, box-shadow 0.2s;
-}
-.letter-open-btn:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(37,99,235,0.4); }
-
-/* letter unlock button (in garden) */
-#letter-unlock-btn {
-  display:none; margin:8px auto 14px;
-  background:linear-gradient(135deg,#2563eb,#8b5cf6);
-  color:white; border:none; border-radius:50px; padding:11px 26px;
-  font-family:'Caveat',cursive; font-size:1.1rem; font-weight:700;
-  cursor:pointer; box-shadow:0 4px 16px rgba(37,99,235,0.3);
-  animation:unlockPulse 1.5s ease-in-out infinite;
-}
-#letter-unlock-btn.show { display:block; }
-@keyframes unlockPulse { 0%,100%{transform:scale(1);box-shadow:0 4px 16px rgba(37,99,235,0.3)} 50%{transform:scale(1.04);box-shadow:0 6px 24px rgba(139,92,246,0.4)} }
-
 /* ── PARTICLES ── */
 .confetti-piece { position:fixed; pointer-events:none; animation:confettiFall var(--dur) ease-in forwards; z-index:600; }
 @keyframes confettiFall { 0%{transform:translateY(-20px)rotate(0deg)scale(1);opacity:1} 100%{transform:translateY(105vh)rotate(720deg)scale(0.5);opacity:0} }
@@ -361,6 +462,367 @@ body.midnight .wish-item { background:rgba(26,58,107,0.3); }
   .bday-card{padding:20px 16px}
   .letter-paper{padding:24px 18px}
 }
+
+/* ══════════════════════════════════════
+   💌 POCKET ENVELOPE — In-place letter
+   Three-layer stack: back → letter → front
+   Letter slides UP out of pocket on click,
+   slides back DOWN to close.
+══════════════════════════════════════ */
+
+/* ── Unlock trigger (in garden, after 100 roses) ── */
+#letter-unlock-btn {
+  display:none; margin:10px auto 16px;
+  background:none; border:none; cursor:pointer;
+  padding:0; outline:none;
+}
+#letter-unlock-btn.show {
+  display:block;
+  animation:envReveal 0.7s cubic-bezier(.22,1,.36,1) forwards;
+}
+@keyframes envReveal {
+  from { opacity:0; transform:scale(0.6) translateY(16px); }
+  to   { opacity:1; transform:scale(1)   translateY(0); }
+}
+
+/* Small preview envelope shown in garden */
+.env-preview-wrap {
+  width:clamp(120px,40vw,160px);
+  margin:0 auto;
+  filter:drop-shadow(0 6px 18px rgba(37,99,235,0.28));
+  animation:envFloat 3.2s ease-in-out infinite;
+  transition:filter 0.3s;
+  cursor:pointer;
+}
+.env-preview-wrap:hover {
+  filter:drop-shadow(0 10px 28px rgba(139,92,246,0.45));
+}
+@keyframes envFloat {
+  0%,100% { transform:translateY(0) rotate(-1.2deg); }
+  50%     { transform:translateY(-9px) rotate(1.2deg); }
+}
+.env-hint {
+  font-family:'Caveat',cursive; font-size:0.88rem;
+  color:var(--blue3); text-align:center;
+  margin-top:6px; opacity:0.85;
+  animation:pulseHint 2s ease-in-out infinite;
+}
+
+/* ══════════════════════════════════════
+   POCKET ENVELOPE OVERLAY
+   Full-screen dark backdrop
+══════════════════════════════════════ */
+#env-overlay {
+  position:fixed; inset:0; z-index:8500;
+  display:none; align-items:flex-end; justify-content:center;
+  background:rgba(4,10,30,0.82);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  /* Safe area padding (notch phones) */
+  padding-bottom:max(env(safe-area-inset-bottom), 0px);
+}
+#env-overlay.show { display:flex; }
+
+/* ══════════════════════════════════════
+   POCKET ENVELOPE WIDGET
+   Width: 88vw, max 420px
+   Sits at bottom of screen (thumb-friendly)
+══════════════════════════════════════ */
+#pocket-envelope {
+  position:relative;
+  width:min(420px, 88vw);
+  /* Envelope height — letter peeks above this */
+  --env-h: clamp(170px, 26vh, 220px);
+  /* Letter height — taller than envelope for portrait feel */
+  --letter-h: clamp(360px, 62vh, 520px);
+  height:calc(var(--env-h) + 20px); /* just the envelope visible at start */
+  margin-bottom:0;
+  cursor:pointer;
+  user-select:none;
+  /* Reserve vertical space so letter doesn't overflow viewport */
+  /* Will expand when letter opens */
+  transition:height 0s;
+}
+
+/* ── Layer 1: Envelope Back ── */
+#env-back {
+  position:absolute;
+  bottom:0; left:0; right:0;
+  height:var(--env-h);
+  border-radius:18px 18px 14px 14px;
+  background:linear-gradient(160deg, #fef6e4, #fde3a7);
+  border:1.5px solid rgba(245,158,11,0.35);
+  box-shadow:
+    0 -2px 0 rgba(255,255,255,0.5) inset,
+    0 12px 48px rgba(0,0,0,0.45);
+  z-index:1;
+  overflow:hidden;
+}
+
+/* Decorative V-fold lines on envelope back */
+#env-back::before {
+  content:'';
+  position:absolute; inset:0;
+  background:
+    linear-gradient(135deg, transparent 49.4%, rgba(220,140,20,0.15) 49.4%, rgba(220,140,20,0.15) 50.6%, transparent 50.6%),
+    linear-gradient(225deg, transparent 49.4%, rgba(220,140,20,0.15) 49.4%, rgba(220,140,20,0.15) 50.6%, transparent 50.6%);
+  pointer-events:none;
+}
+
+/* Bottom address area */
+.env-back-from {
+  position:absolute; top:14px; left:16px;
+  font-family:'Caveat',cursive; font-size:0.75rem;
+  color:#92400e; line-height:1.5; opacity:0.75;
+}
+.env-back-stamp {
+  position:absolute; top:10px; right:14px;
+  width:30px; height:36px; border-radius:3px;
+  background:linear-gradient(135deg,#dbeafe,#bfdbfe);
+  border:1px solid rgba(147,197,253,0.55);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1rem;
+  box-shadow:0 1px 4px rgba(0,0,0,0.12);
+}
+.env-back-to {
+  position:absolute;
+  bottom:28%; left:50%; transform:translateX(-50%);
+  font-family:'Caveat',cursive; font-size:1rem;
+  color:#78350f; font-weight:700; white-space:nowrap;
+}
+
+/* ── Layer 2: Letter Paper ── */
+#env-letter {
+  position:absolute;
+  bottom:calc(var(--env-h) * 0.18); /* tucked inside envelope */
+  left:50%;
+  transform:translateX(-50%) translateY(0);
+  width:calc(100% - 16px);
+  height:var(--letter-h);
+  border-radius:12px 12px 6px 6px;
+  background:linear-gradient(170deg, #fffdf7 0%, #fff9f0 60%, #fff4e6 100%);
+  border:1px solid rgba(245,158,11,0.22);
+  box-shadow:
+    0 -6px 24px rgba(0,0,0,0.2),
+    0 2px 0 rgba(255,255,255,0.8) inset;
+  z-index:2;
+  /* Start: hidden inside envelope (translateY = 0, only top peek visible) */
+  transform:translateX(-50%) translateY(calc(var(--letter-h) - var(--env-h) * 0.55));
+  transition:transform 0.85s cubic-bezier(0.4, 0, 0.2, 1),
+             box-shadow 0.85s cubic-bezier(0.4, 0, 0.2, 1),
+             scale 0.85s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow:hidden;
+  pointer-events:none;
+}
+
+/* Letter is OUT */
+#env-letter.letter-open {
+  transform:translateX(-50%) translateY(calc(-1 * var(--letter-h) + var(--env-h) * 0.32));
+  box-shadow:
+    0 -12px 40px rgba(0,0,0,0.3),
+    0 4px 0 rgba(255,255,255,0.9) inset;
+  pointer-events:auto;
+}
+
+/* Lined paper texture */
+#env-letter::before {
+  content:'';
+  position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(
+    transparent, transparent 27px,
+    rgba(147,197,253,0.14) 28px
+  );
+  border-radius:inherit;
+}
+
+/* Letter inner content (scrollable) */
+#env-letter-inner {
+  position:absolute; inset:0;
+  padding:22px 20px 26px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  /* Scroll only when open */
+  overflow-y:hidden;
+}
+#env-letter.letter-open #env-letter-inner {
+  overflow-y:auto;
+}
+
+.env-letter-heading {
+  font-family:'Caveat',cursive; font-size:1.05rem; font-weight:800;
+  color:#b45309; text-align:center;
+  margin-bottom:14px; padding-bottom:10px;
+  border-bottom:1px dashed rgba(245,158,11,0.3);
+  position:relative;
+}
+
+/* Scroll hint arrow (shows briefly when letter opens) */
+.env-scroll-hint {
+  position:absolute; bottom:8px; left:50%; transform:translateX(-50%);
+  font-size:0.7rem; color:rgba(180,83,9,0.5);
+  font-family:'Caveat',cursive;
+  animation:scrollBounce 1.4s ease-in-out 3;
+  pointer-events:none;
+}
+@keyframes scrollBounce {
+  0%,100% { transform:translateX(-50%) translateY(0); opacity:0.5; }
+  50%     { transform:translateX(-50%) translateY(-4px); opacity:1; }
+}
+
+.env-letter-body {
+  font-family:'Caveat',cursive;
+  font-size:clamp(1.08rem, 3vw, 1.25rem);
+  color:#1e3a5f; line-height:1.9; font-weight:600;
+  position:relative;
+}
+.env-letter-body p { margin-bottom:13px; }
+.env-letter-sign {
+  text-align:right; font-family:'Caveat',cursive;
+  font-size:1.05rem; color:#2563eb;
+  margin-top:18px; padding-top:10px;
+  border-top:1px dashed rgba(147,197,253,0.4);
+  font-weight:700; position:relative;
+}
+
+/* ── Layer 3: Envelope Front ── */
+#env-front {
+  position:absolute;
+  bottom:0; left:0; right:0;
+  z-index:3;
+  pointer-events:none; /* clicks pass through to letter/envelope */
+}
+
+/* Front flap SVG wrapper */
+#env-flap-wrap {
+  position:absolute;
+  top:0; left:0; right:0;
+  height:calc(var(--env-h) * 0.55);
+  overflow:visible;
+  transform-origin:top center;
+  transform:rotateX(0deg);
+  transition:transform 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style:preserve-3d;
+  backface-visibility:hidden;
+}
+#env-flap-wrap.flap-open {
+  transform:rotateX(-185deg);
+}
+
+.env-flap-shape {
+  position:absolute; inset:0;
+  clip-path:polygon(0 0, 100% 0, 50% 95%);
+  background:linear-gradient(175deg, #fde8a0, #f5c842);
+  border-bottom:1px solid rgba(200,130,0,0.2);
+  box-shadow:0 4px 12px rgba(0,0,0,0.1) inset;
+}
+.env-flap-shape::after {
+  content:'';
+  position:absolute; inset:0;
+  clip-path:polygon(0 0, 100% 0, 50% 95%);
+  background:linear-gradient(175deg, rgba(255,255,255,0.2), transparent 60%);
+}
+
+/* Wax seal on flap */
+#env-wax-seal {
+  position:absolute;
+  /* Center of the flap triangle (roughly 40% down) */
+  top:40%; left:50%;
+  transform:translate(-50%, -50%);
+  width:48px; height:48px; border-radius:50%;
+  background:radial-gradient(circle at 32% 28%, #f87171, #b91c1c 55%, #7f1d1d);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.4rem;
+  box-shadow:
+    0 3px 14px rgba(185,28,28,0.55),
+    0 1px 0 rgba(255,255,255,0.25) inset;
+  animation:sealPulse 2.2s ease-in-out infinite;
+  z-index:4; pointer-events:none;
+  transition:transform 0.35s, opacity 0.35s;
+}
+#env-wax-seal.seal-hidden {
+  transform:translate(-50%,-50%) scale(0);
+  opacity:0;
+  animation:none;
+}
+@keyframes sealPulse {
+  0%,100% { transform:translate(-50%,-50%) scale(1); }
+  50%     { transform:translate(-50%,-50%) scale(1.1); }
+}
+
+/* Bottom strip of envelope front (covers letter bottom) */
+#env-front-bottom {
+  position:absolute;
+  bottom:0; left:0; right:0;
+  height:calc(var(--env-h) * 0.42);
+  border-radius:0 0 14px 14px;
+  background:linear-gradient(180deg, #fde8a0 0%, #fcd966 100%);
+  border-top:1.5px solid rgba(200,140,0,0.25);
+  box-shadow:0 -1px 0 rgba(255,255,255,0.4) inset;
+}
+
+/* "tap to close" hint shown when letter is open */
+#env-tap-hint {
+  position:absolute;
+  bottom:calc(var(--env-h) * 0.44 + 8px);
+  left:50%; transform:translateX(-50%);
+  font-family:'Caveat',cursive; font-size:0.78rem;
+  color:rgba(255,255,255,0.55);
+  white-space:nowrap; opacity:0;
+  transition:opacity 0.5s 0.8s;
+  pointer-events:none; z-index:5;
+}
+#pocket-envelope.is-open #env-tap-hint { opacity:1; }
+
+/* ══════════════════════════════════════
+   🌹 FALLING PETALS
+══════════════════════════════════════ */
+.petal {
+  position:fixed; pointer-events:none; z-index:450;
+  will-change:transform, opacity;
+  animation:petalFall var(--dur) var(--delay) linear infinite;
+  opacity:0;
+}
+@keyframes petalFall {
+  0%   { opacity:0; transform:translate(0,0) rotate(var(--rot0)) scale(var(--sc)); }
+  8%   { opacity:0.85; }
+  90%  { opacity:0.7; }
+  100% { opacity:0; transform:translate(var(--tx),105vh) rotate(var(--rot1)) scale(var(--sc)); }
+}
+
+/* ══════════════════════════════════════
+   🖱️ CUSTOM HEART CURSOR (desktop only)
+══════════════════════════════════════ */
+body.custom-cursor-active { cursor:none; }
+#custom-cursor {
+  position:fixed; pointer-events:none; z-index:99999;
+  width:22px; height:22px;
+  transform:translate(-50%,-50%);
+  transition:opacity 0.3s;
+  display:none;
+}
+body.custom-cursor-active #custom-cursor { display:block; }
+
+/* Cursor trail particles */
+.cursor-trail {
+  position:fixed; pointer-events:none; z-index:99998;
+  border-radius:50%; opacity:0;
+  animation:trailFade 0.55s ease-out forwards;
+}
+@keyframes trailFade {
+  0%  { opacity:0.7; transform:scale(1); }
+  100%{ opacity:0;   transform:scale(0.1); }
+}
+
+/* ══════════════════════════════════════
+   ⭐ INTERACTIVE STARFIELD (Midnight)
+   — Extra glow canvas on top of starfield
+══════════════════════════════════════ */
+#star-glow-canvas {
+  position:fixed; inset:0; z-index:2;
+  pointer-events:none; opacity:0;
+  transition:opacity 0.8s;
+}
+body.midnight #star-glow-canvas { opacity:1; }
 </style>
 </head>
 <body>
@@ -381,20 +843,85 @@ body.midnight .wish-item { background:rgba(26,58,107,0.3); }
 </div>
 
 <canvas id="starfield"></canvas>
+<canvas id="star-glow-canvas"></canvas>
+
+<!-- Custom heart cursor (desktop) -->
+<div id="custom-cursor">
+  <svg viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
+    <path d="M11 19 C11 19 2 13 2 7 A4.5 4.5 0 0 1 11 5.5 A4.5 4.5 0 0 1 20 7 C20 13 11 19 11 19Z"
+          fill="#f9a8d4" stroke="rgba(190,24,93,0.6)" stroke-width="1"/>
+    <circle cx="8" cy="8" r="1.5" fill="rgba(255,255,255,0.6)"/>
+  </svg>
+</div>
 
 <!-- CURTAIN -->
 <div id="curtain">
   <div class="curtain-half"></div>
   <div class="curtain-half"></div>
 </div>
-<div id="curtain-label">✨ happy birthday vellycia ✨</div>
+<div id="curtain-label">✨ happy birthday lovellyy ✨</div>
 
-<!-- AUDIO BAR -->
-<div id="audio-bar" onclick="toggleAudio()">
-  <span class="audio-vinyl" id="audio-vinyl">🎵</span>
-  <span class="audio-label" id="audio-label">Can't Help Falling In Love</span>
-  <button id="audio-btn">▶</button>
-</div>
+<!-- ══════════════ VINYL RECORD PLAYER ══════════════ -->
+<div id="vinyl-player">
+  <div id="vinyl-cabinet">
+
+    <!-- Platter + Disc -->
+    <div id="vinyl-platter-wrap">
+
+      <!-- The spinning vinyl disc -->
+      <div id="vinyl-disc" onclick="toggleAudio()" title="click to play / pause">
+
+        <!-- Album art label in center -->
+        <div id="vinyl-label">
+          <img src="img/R-1113716-1341151450-3286.jpg" alt="George Benson" draggable="false">
+        </div>
+
+        <!-- Center spindle -->
+        <div id="vinyl-spindle"></div>
+      </div>
+
+      <!-- Tonearm (SVG) — pivots from top-right -->
+      <svg id="tonearm-svg" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+        <!-- Pivot base -->
+        <circle cx="68" cy="10" r="6" fill="#2d3f6b" stroke="rgba(147,197,253,0.4)" stroke-width="1.2"/>
+        <circle cx="68" cy="10" r="3" fill="#1a2744"/>
+        <!-- Arm -->
+        <path d="M68 14 Q60 28 42 62" stroke="#b0c4de" stroke-width="3.5"
+              stroke-linecap="round" fill="none"
+              style="filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5))"/>
+        <!-- Head shell -->
+        <rect x="36" y="58" width="12" height="6" rx="2"
+              fill="#8bafd4" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"
+              transform="rotate(-30 42 61)"/>
+        <!-- Stylus needle -->
+        <line x1="40" y1="65" x2="38" y2="70"
+              stroke="#e2e8f0" stroke-width="1.2" stroke-linecap="round"
+              transform="rotate(-30 40 65)"/>
+      </svg>
+
+      <!-- Floating music notes (show when playing) -->
+      <div id="vinyl-notes">
+        <span class="vinyl-note">🎵</span>
+        <span class="vinyl-note">♪</span>
+        <span class="vinyl-note">🎶</span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div id="vinyl-controls">
+      <button id="vinyl-play-btn" onclick="toggleAudio()" aria-label="Play / Pause">▶</button>
+      <div class="vinyl-track-info">
+        <span class="vinyl-song-title">Nothing's Gonna Change My Love</span>
+        <span class="vinyl-song-artist">George Benson</span>
+      </div>
+    </div>
+
+    <!-- Volume slider -->
+    <input type="range" id="vinyl-volume" min="0" max="1" step="0.01" value="0.45"
+           oninput="setVolume(this.value)" aria-label="Volume">
+
+  </div><!-- /cabinet -->
+</div><!-- /vinyl-player -->
 
 <!-- WATERING CAN -->
 <div id="wateringCan">
@@ -459,8 +986,36 @@ body.midnight .wish-item { background:rgba(26,58,107,0.3); }
         like u — pretty, sweet, dan gorgeous 💙
       </p>
     </div>
-    <button id="letter-unlock-btn" onclick="openLetter()">
-      💌 open it
+    <button id="letter-unlock-btn" onclick="openEnvelope()">
+      <div class="env-preview-wrap">
+        <svg viewBox="0 0 160 108" width="100%" xmlns="http://www.w3.org/2000/svg">
+          <!-- Back -->
+          <rect x="2" y="20" width="156" height="86" rx="11" fill="#fde8c8" stroke="rgba(220,140,20,0.35)" stroke-width="1.5"/>
+          <!-- V-fold lines -->
+          <line x1="2" y1="106" x2="80" y2="64" stroke="rgba(200,130,10,0.22)" stroke-width="1.2"/>
+          <line x1="158" y1="106" x2="80" y2="64" stroke="rgba(200,130,10,0.22)" stroke-width="1.2"/>
+          <!-- Flap -->
+          <polygon points="2,20 158,20 80,68" fill="#f9c84a" stroke="rgba(200,130,0,0.2)" stroke-width="1"/>
+          <polygon points="2,20 158,20 80,68" fill="url(#flapGrad)" opacity="0.5"/>
+          <defs>
+            <linearGradient id="flapGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="white" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="white" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- Wax seal -->
+          <circle cx="80" cy="70" r="16" fill="#dc2626" opacity="0.92"/>
+          <circle cx="80" cy="70" r="16" fill="radial-gradient(circle,#f87171,#991b1b)" opacity="0.4"/>
+          <text x="80" y="76" text-anchor="middle" font-size="15">💌</text>
+          <!-- Stamp -->
+          <rect x="122" y="25" width="28" height="32" rx="3" fill="#dbeafe" stroke="rgba(147,197,253,0.5)" stroke-width="1"/>
+          <text x="136" y="45" text-anchor="middle" font-size="14">🌹</text>
+          <!-- From address -->
+          <text x="12" y="38" font-family="Georgia,serif" font-size="8" fill="#92400e" opacity="0.7">to: vellycia 🌹</text>
+          <text x="12" y="50" font-family="Georgia,serif" font-size="8" fill="#92400e" opacity="0.6">with love 💙</text>
+        </svg>
+      </div>
+      <p class="env-hint">✦ klik untuk membuka surat 💌 ✦</p>
     </button>
   </div>
 
@@ -479,21 +1034,52 @@ body.midnight .wish-item { background:rgba(26,58,107,0.3); }
   </div>
 </div>
 
-<!-- ══════════════ HIDDEN LETTER MODAL ══════════════ -->
-<div id="letter-overlay">
-  <div class="letter-paper">
-    <button class="letter-close-btn" onclick="closeLetter()">✕</button>
-    <div class="letter-header">
-      <span class="letter-seal">💌</span>
-      <div class="letter-title">letter for u, vell</div>
-      <div class="letter-from">— a gift after 100 roses bloom —</div>
+<!-- ══════════════ POCKET ENVELOPE ══════════════
+     Three-layer stack (back → letter → front).
+     Sits at bottom of screen — thumb-friendly.
+     Click anywhere on envelope to toggle open/close.
+════════════════════════════════════════════════ -->
+<div id="env-overlay">
+
+  <!-- Backdrop click closes envelope -->
+  <div id="env-backdrop-hit" onclick="toggleLetter()" style="position:absolute;inset:0;z-index:0;"></div>
+
+  <div id="pocket-envelope" onclick="toggleLetter()">
+
+    <!-- LAYER 1: Envelope Back -->
+    <div id="env-back">
+      <div class="env-back-from">to: vellycia 🌹<br>with love 💙</div>
+      <div class="env-back-stamp">🌹</div>
+      <div class="env-back-to">vellycia 💙</div>
     </div>
-    <div class="letter-divider"></div>
-    <div class="letter-body" id="letterBody"></div>
-    <div class="letter-sign" id="letterSign"></div>
-    <button class="letter-open-btn" onclick="closeLetter()">close letter 💙</button>
-  </div>
-</div>
+
+    <!-- LAYER 2: Letter Paper (slides up/down) -->
+    <div id="env-letter">
+      <div id="env-letter-inner">
+        <div class="env-letter-heading">✦ a letter for u, vell ✦</div>
+        <div class="env-letter-body" id="envLetterBody"></div>
+        <div class="env-letter-sign"  id="envLetterSign"></div>
+        <div class="env-scroll-hint" id="envScrollHint">scroll to read ↓</div>
+      </div>
+    </div>
+
+    <!-- LAYER 3: Envelope Front (flap + bottom strip cover letter) -->
+    <div id="env-front">
+      <!-- Flap rotates open -->
+      <div id="env-flap-wrap">
+        <div class="env-flap-shape"></div>
+        <!-- Wax seal lives on the flap -->
+        <div id="env-wax-seal">💌</div>
+      </div>
+      <!-- Bottom strip always covers letter bottom -->
+      <div id="env-front-bottom"></div>
+    </div>
+
+    <!-- "tap to close" floating hint -->
+    <div id="env-tap-hint">tap envelope to close ✕</div>
+
+  </div><!-- /pocket-envelope -->
+</div><!-- /env-overlay -->
 
 <script>
 'use strict';
@@ -537,61 +1123,186 @@ if(!isMobile){
 }
 
 // ═══════════════════════════════════════
-// STARFIELD
+// ⭐ INTERACTIVE STARFIELD
+// Stars glow & repel toward cursor in midnight mode
 // ═══════════════════════════════════════
 const sfCv=$('starfield'), sfCtx=sfCv.getContext('2d');
-function sfResize(){sfCv.width=innerWidth;sfCv.height=innerHeight;}
+const sgCv=$('star-glow-canvas'), sgCtx=sgCv.getContext('2d');
+function sfResize(){
+  sfCv.width=innerWidth; sfCv.height=innerHeight;
+  sgCv.width=innerWidth; sgCv.height=innerHeight;
+}
 sfResize(); window.addEventListener('resize',sfResize);
-const sfStars=Array.from({length:isMobile?60:100},()=>({
+
+const sfStars=Array.from({length:isMobile?70:130},()=>({
   x:Math.random()*innerWidth, y:Math.random()*innerHeight,
-  r:Math.random()*2+0.4, phase:Math.random()*Math.PI*2, speed:0.004+Math.random()*0.007
+  ox:0, oy:0, // original positions set below
+  r:Math.random()*2.2+0.4, phase:Math.random()*Math.PI*2, speed:0.003+Math.random()*0.007,
+  glowR:0, // extra glow radius from cursor proximity
 }));
+// store originals
+sfStars.forEach(s=>{s.ox=s.x; s.oy=s.y;});
+
+let sfMouseX=-9999, sfMouseY=-9999;
+// Track cursor for star interactions
+window.addEventListener('mousemove',e=>{sfMouseX=e.clientX; sfMouseY=e.clientY;});
+window.addEventListener('touchmove',e=>{if(e.touches[0]){sfMouseX=e.touches[0].clientX;sfMouseY=e.touches[0].clientY;}},{passive:true});
+
 function sfDraw(ts){
   sfCtx.clearRect(0,0,sfCv.width,sfCv.height);
+  sgCtx.clearRect(0,0,sgCv.width,sgCv.height);
+
   sfStars.forEach(s=>{
+    // Base twinkle alpha
     const a=0.07+0.28*(0.5+0.5*Math.sin(ts*s.speed+s.phase));
-    sfCtx.beginPath();sfCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
-    sfCtx.fillStyle=`rgba(59,130,246,${a})`;sfCtx.fill();
+
+    // Cursor proximity effect (only in midnight mode)
+    if(midnightMode){
+      const dx=sfMouseX-s.x, dy=sfMouseY-s.y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      const proxRadius=isMobile?80:120;
+
+      if(dist<proxRadius){
+        const force=(1-dist/proxRadius);
+        // Magnetic attraction — stars drift toward cursor
+        s.x += (sfMouseX - s.x) * 0.04 * force;
+        s.y += (sfMouseY - s.y) * 0.04 * force;
+        s.glowR = force * (isMobile?14:20);
+
+        // Draw glow halo on glow canvas
+        const grd=sgCtx.createRadialGradient(s.x,s.y,0,s.x,s.y,s.glowR*2.5);
+        grd.addColorStop(0,`rgba(147,210,255,${force*0.55})`);
+        grd.addColorStop(1,'rgba(147,210,255,0)');
+        sgCtx.beginPath();
+        sgCtx.arc(s.x,s.y,s.glowR*2.5,0,Math.PI*2);
+        sgCtx.fillStyle=grd; sgCtx.fill();
+      } else {
+        // Drift back to original position smoothly
+        s.x += (s.ox - s.x) * 0.03;
+        s.y += (s.oy - s.y) * 0.03;
+        s.glowR = Math.max(0, s.glowR - 0.5);
+      }
+    }
+
+    // Draw star on base canvas
+    sfCtx.beginPath();
+    sfCtx.arc(s.x, s.y, s.r + (s.glowR>0 ? s.glowR*0.1 : 0), 0, Math.PI*2);
+    const col = midnightMode
+      ? `rgba(180,220,255,${Math.min(1, a + s.glowR*0.04)})`
+      : `rgba(59,130,246,${a})`;
+    sfCtx.fillStyle=col; sfCtx.fill();
   });
+
   requestAnimationFrame(sfDraw);
 }
 requestAnimationFrame(sfDraw);
 
 // ═══════════════════════════════════════
-// AUDIO
+// 🖱️ CUSTOM HEART CURSOR (desktop only)
 // ═══════════════════════════════════════
-const audio = new Audio('audio/Cant Help Falling In Love (with The Royal Philharmonic Orchestra).mp3');
-audio.loop=true; audio.volume=0.45;
-let audioPlaying=false;
-let audioStarted=false;
+const cursorEl = $('custom-cursor');
+let trailTimer = null;
 
-function startAudio(){
-  if(audioStarted) return;
-  audioStarted=true;
-  audio.play().then(()=>{
-    audioPlaying=true;
-    $('audio-btn').textContent='⏸';
-    document.getElementById('audio-vinyl').style.animationPlayState='running';
-  }).catch(()=>{});
+if(!isMobile){
+  document.body.classList.add('custom-cursor-active');
+
+  document.addEventListener('mousemove', e=>{
+    cursorEl.style.left = e.clientX+'px';
+    cursorEl.style.top  = e.clientY+'px';
+
+    // Spawn trail particles (throttled)
+    if(!trailTimer){
+      trailTimer=setTimeout(()=>{
+        const t=document.createElement('div');
+        t.className='cursor-trail';
+        const sz=4+Math.random()*5;
+        const trailColors=['#f9a8d4','#93c5fd','#c4b5fd','#fbbf24','#6ee7b7'];
+        t.style.cssText=`left:${e.clientX}px;top:${e.clientY}px;
+          width:${sz}px;height:${sz}px;
+          background:${trailColors[Math.floor(Math.random()*trailColors.length)]};
+          transform:translate(-50%,-50%);`;
+        document.body.appendChild(t);
+        setTimeout(()=>t.remove(), 600);
+        trailTimer=null;
+      },30);
+    }
+  });
 }
 
-function toggleAudio(){
+// ═══════════════════════════════════════
+// 🎵 VINYL RECORD PLAYER — Audio + Animation
+// Syncs disc rotation, tonearm, & notes
+// with the Web Audio API playback state.
+// ═══════════════════════════════════════
+const audio = new Audio('audio/George Benson - Nothings Gonna Change My Love For You (Official Audio).mp3');
+audio.loop = true;
+audio.volume = 0.45;
+
+let audioPlaying = false;
+let audioStarted  = false;
+
+/* -- DOM refs for vinyl UI -- */
+const vinylDisc     = document.getElementById('vinyl-disc');
+const tonearmSvg    = document.getElementById('tonearm-svg');
+const vinylPlayBtn  = document.getElementById('vinyl-play-btn');
+const vinylNotes    = document.getElementById('vinyl-notes');
+const vinylVolSlider = document.getElementById('vinyl-volume');
+
+/** Apply playing state to all visual elements */
+function setVinylState(playing) {
+  audioPlaying = playing;
+
+  // Disc spin
+  vinylDisc.style.animationPlayState = playing ? 'running' : 'paused';
+
+  // Tonearm: swing onto record when playing, lift off when paused
+  tonearmSvg.classList.toggle('playing', playing);
+
+  // Play / Pause button icon
+  vinylPlayBtn.textContent = playing ? '⏸' : '▶';
+
+  // Floating notes
+  vinylNotes.classList.toggle('playing', playing);
+}
+
+/** Start audio on first user interaction */
+function startAudio() {
+  if (audioStarted) return;
+  audioStarted = true;
+  audio.play().then(() => {
+    setVinylState(true);
+  }).catch(() => {
+    // Autoplay blocked — UI stays in paused state
+    audioStarted = false;
+  });
+}
+
+/** Toggle play / pause */
+function toggleAudio() {
   haptic(30);
-  if(!audioStarted){ startAudio(); return; }
-  if(audioPlaying){
-    audio.pause(); audioPlaying=false;
-    $('audio-btn').textContent='▶';
-    $('audio-vinyl').style.animationPlayState='paused';
+  if (!audioStarted) { startAudio(); return; }
+
+  if (audioPlaying) {
+    audio.pause();
+    setVinylState(false);
   } else {
-    audio.play(); audioPlaying=true;
-    $('audio-btn').textContent='⏸';
-    $('audio-vinyl').style.animationPlayState='running';
+    audio.play().then(() => setVinylState(true)).catch(() => {});
   }
 }
 
-// Start on first interaction
-document.addEventListener('click', startAudio, {once:true});
-document.addEventListener('touchstart', startAudio, {once:true});
+/** Volume control — updates CSS variable for slider fill */
+function setVolume(v) {
+  audio.volume = parseFloat(v);
+  const pct = Math.round(v * 100) + '%';
+  vinylVolSlider.style.setProperty('--vol', pct);
+}
+
+// Initialise volume slider fill
+setVolume(audio.volume);
+
+// Start on first interaction (autoplay policy)
+document.addEventListener('click',      startAudio, { once: true });
+document.addEventListener('touchstart', startAudio, { once: true });
 
 // ═══════════════════════════════════════
 // 🌙 EASTER EGG — Moon click 3x
@@ -638,7 +1349,7 @@ function toggleMidnight(){
 // ═══════════════════════════════════════
 const now0=new Date();
 let target=new Date('2025-04-09T00:00:00');
-if(now0>=target) target=new Date('2026-04-09T00:00:00');
+if(now0>=target) target=new Date('2026-03-12T11:42:00');
 const pad=n=>String(n).padStart(2,'0');
 function popNum(el){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');setTimeout(()=>el.classList.remove('pop'),280);}
 let prevSec=-1;
@@ -740,63 +1451,241 @@ function startTypewriter(){
 }
 
 // ═══════════════════════════════════════
-// 💌 HIDDEN LETTER
+// 💌 POCKET ENVELOPE — Interactive toggle
+//
+// State machine:
+//   closed  → click → opening (flap flips, letter rises)
+//   opening → animEnd → open (letter readable, scroll enabled)
+//   open    → click → closing (letter drops back, flap closes)
+//   closing → animEnd → closed
+//
+// Three DOM layers:
+//   #env-back    z:1  (envelope background)
+//   #env-letter  z:2  (letter paper, slides via transform)
+//   #env-front   z:3  (flap + bottom strip, always covers letter edges)
 // ═══════════════════════════════════════
-const letterContent=`bocill,\n have watered 100 roses.\nthats no coincidence — thats u.\nu are the one who is attentive, patient, and never gives up.\n\ntoday, 9 april, i want to say something that I might have never said directly:\n\nthanks for existing. truly.\nnot cz u're perfect(but ik u = perfect) — but precisely because u are u. With all ur exhaustion, all ur cries, and all ur "i can't do this anymore" moments.\n\nu strong without realizing it, velly. and thats one of the most beautiful things ive ever seen.\n\nhappy birthday. i hope this year is much lighter, much happier, and full of things that make u smile for no reason yaa.\n\nu deserve it all. every single bit of it. 💙`;
+const letterContent = `bocill,\nhave watered 100 roses.\nthats no coincidence — thats u.\nu are the one who is attentive, patient, and never gives up.\n\ntoday, 9 april, i want to say something that I might have never said directly:\n\nthanks for existing. truly.\nnot cz u're perfect(but ik u = perfect) — but precisely because u are u. With all ur exhaustion, all ur cries, and all ur "i can't do this anymore" moments.\n\nu strong without realizing it, velly. and thats one of the most beautiful things ive ever seen.\n\nhappy birthday. i hope this year is much lighter, much happier, and full of things that make u smile for no reason yaa.\n\nu deserve it all. every single bit of it. 💙`;
 
-let letterTyping=false;
+let isLetterOpen   = false;   // current visible state
+let letterAnimating = false;  // guard against rapid taps
+let letterTyped    = false;   // type-once flag
 
-function openLetter(){
-  haptic([50,80,50,80,50]);
-  $('letter-overlay').classList.add('show');
-  if(!letterTyping){
-    letterTyping=true;
-    typeLetter();
+/* ── Open envelope (from garden button) ── */
+function openEnvelope() {
+  haptic([40,60,40,60,50]);
+  $('env-overlay').classList.add('show');
+  document.body.style.overflow = 'hidden'; // scroll-lock
+  // reset to closed state each time overlay opens fresh
+  if (!isLetterOpen) resetEnvelopeState();
+}
+
+/* ── Close entire overlay ── */
+function closeEnvelope() {
+  haptic(30);
+  $('env-overlay').classList.remove('show');
+  document.body.style.overflow = '';
+  // if letter was open, snap it back so next open looks clean
+  if (isLetterOpen) {
+    isLetterOpen = false;
+    $('env-letter').classList.remove('letter-open');
+    $('env-flap-wrap').classList.remove('flap-open');
+    $('env-wax-seal').classList.remove('seal-hidden');
+    $('pocket-envelope').classList.remove('is-open');
   }
 }
 
-function closeLetter(){
-  haptic(30);
-  $('letter-overlay').classList.remove('show');
+/* ── Toggle letter open / close on tap ── */
+function toggleLetter() {
+  if (letterAnimating) return;
+  if (!isLetterOpen) openLetter();
+  else               closeLetter();
 }
 
-function typeLetter(){
-  const body=$('letterBody');
-  const sign=$('letterSign');
-  body.innerHTML='';
-  sign.textContent='';
+function openLetter() {
+  letterAnimating = true;
+  isLetterOpen    = true;
+  haptic([25, 40, 25, 50, 80]);
 
-  const paragraphs=letterContent.split('\n\n');
-  let pIdx=0;
+  // 1. Hide wax seal
+  $('env-wax-seal').classList.add('seal-hidden');
 
-  function typeNextParagraph(){
-    if(pIdx>=paragraphs.length){
-      // sign
-      const signText='— someone who cares about you 💙';
-      let si=0;
-      const signInterval=setInterval(()=>{
-        sign.textContent+=signText[si++];
-        if(si>=signText.length) clearInterval(signInterval);
-      },35);
+  // 2. Flip the flap open
+  setTimeout(() => {
+    $('env-flap-wrap').classList.add('flap-open');
+  }, 120);
+
+  // 3. Slide letter UP (CSS transition handles it)
+  setTimeout(() => {
+    $('env-letter').classList.add('letter-open');
+    $('pocket-envelope').classList.add('is-open');
+  }, 350);
+
+  // 4. Type content once
+  setTimeout(() => {
+    letterAnimating = false;
+    if (!letterTyped) {
+      letterTyped = true;
+      typeEnvLetter();
+    }
+    // Briefly show scroll hint
+    const hint = $('envScrollHint');
+    if (hint) {
+      hint.style.opacity = '1';
+      setTimeout(() => { hint.style.opacity = '0'; }, 3500);
+    }
+  }, 1100);
+}
+
+function closeLetter() {
+  letterAnimating = true;
+  isLetterOpen    = false;
+  haptic([30, 20, 30]);
+
+  $('pocket-envelope').classList.remove('is-open');
+
+  // 1. Slide letter back DOWN
+  $('env-letter').classList.remove('letter-open');
+
+  // 2. Close flap
+  setTimeout(() => {
+    $('env-flap-wrap').classList.remove('flap-open');
+  }, 300);
+
+  // 3. Restore seal
+  setTimeout(() => {
+    $('env-wax-seal').classList.remove('seal-hidden');
+    letterAnimating = false;
+  }, 850);
+}
+
+function resetEnvelopeState() {
+  isLetterOpen    = false;
+  letterAnimating = false;
+  $('env-letter').classList.remove('letter-open');
+  $('env-flap-wrap').classList.remove('flap-open');
+  $('env-wax-seal').classList.remove('seal-hidden');
+  $('pocket-envelope').classList.remove('is-open');
+}
+
+// Prevent taps on the letter from closing the overlay
+$('env-letter').addEventListener('click', e => e.stopPropagation());
+
+// Backdrop (outside envelope) → close overlay
+$('env-overlay').addEventListener('click', e => {
+  if (e.target === $('env-overlay') || e.target === $('env-backdrop-hit')) {
+    closeEnvelope();
+  }
+});
+
+/* ── Typewriter for letter ── */
+function typeEnvLetter() {
+  const bodyEl = $('envLetterBody');
+  const signEl = $('envLetterSign');
+  bodyEl.innerHTML = '';
+  signEl.textContent = '';
+
+  const paragraphs = letterContent.split('\n\n');
+  let pIdx = 0;
+
+  function typeNextParagraph() {
+    if (pIdx >= paragraphs.length) {
+      // Sign-off
+      const signText = '— someone who cares about you 💙';
+      let si = 0;
+      const iv = setInterval(() => {
+        signEl.textContent += signText[si++];
+        if (si >= signText.length) clearInterval(iv);
+      }, 36);
       return;
     }
-    const p=document.createElement('p');
-    body.appendChild(p);
-    const text=paragraphs[pIdx++].replace(/\n/g,' ');
-    let ci=0;
-    function typeChar(){
-      if(ci>=text.length){ setTimeout(typeNextParagraph,250); return; }
-      p.textContent+=text[ci++];
-      setTimeout(typeChar, 22+Math.random()*14);
+    const p = document.createElement('p');
+    bodyEl.appendChild(p);
+    const text = paragraphs[pIdx++].replace(/\n/g, ' ');
+    let ci = 0;
+    function typeChar() {
+      if (ci >= text.length) { setTimeout(typeNextParagraph, 240); return; }
+      p.textContent += text[ci++];
+      if (isMobile && ci % 24 === 0) haptic(4);
+      setTimeout(typeChar, 20 + Math.random() * 15);
     }
     typeChar();
   }
   typeNextParagraph();
 }
 
-$('letter-overlay').addEventListener('click',e=>{
-  if(e.target===$('letter-overlay')) closeLetter();
-});
+// ═══════════════════════════════════════
+// 🌹 FALLING PETALS
+// Triggered after all 100 roses bloom.
+// Petals are SVG-based for colour fidelity.
+// Max ~30 petals at once for performance.
+// ═══════════════════════════════════════
+let petalsActive = false;
+let petalInterval = null;
+const MAX_PETALS = isMobile ? 18 : 30;
+let petalCount = 0;
+
+// SVG petal shapes (3 variants)
+function petalSVG(hue){
+  const variants=[
+    // Classic oval petal
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 30" width="20" height="30">
+      <ellipse cx="10" cy="15" rx="7" ry="13" fill="hsl(${hue},85%,65%)" opacity="0.88"/>
+      <ellipse cx="10" cy="15" rx="3" ry="9" fill="hsl(${hue},90%,75%)" opacity="0.5"/>
+    </svg>`,
+    // Teardrop petal
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 28" width="18" height="28">
+      <path d="M9 2 C14 8 16 16 9 26 C2 16 4 8 9 2Z" fill="hsl(${hue},80%,62%)" opacity="0.85"/>
+      <path d="M9 6 C11 11 12 18 9 24 C7 18 8 11 9 6Z" fill="hsl(${hue},88%,78%)" opacity="0.45"/>
+    </svg>`,
+    // Wide petal
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 22" width="24" height="22">
+      <ellipse cx="12" cy="11" rx="10" ry="9" fill="hsl(${hue},82%,66%)" opacity="0.82" transform="rotate(-15 12 11)"/>
+    </svg>`,
+  ];
+  return variants[Math.floor(Math.random()*3)];
+}
+
+function spawnPetal(){
+  if(petalCount >= MAX_PETALS) return;
+  petalCount++;
+
+  const el = document.createElement('div');
+  el.className = 'petal';
+
+  // Randomise: hue between red-pink 340-360 / 0-20
+  const hue = Math.random()>0.5 ? 340+Math.random()*20 : Math.random()*20;
+  el.innerHTML = petalSVG(hue);
+
+  const startX  = Math.random()*110 - 5; // vw, allow off-screen
+  const swayX   = (Math.random()-.5) * 160; // px drift left/right
+  const scale   = 0.5 + Math.random()*0.8;
+  const dur     = 6 + Math.random()*6;   // seconds
+  const delay   = Math.random()*4;       // seconds
+  const rot0    = (Math.random()-.5)*60; // start rotation deg
+  const rot1    = rot0 + (Math.random()-.5)*360;
+
+  el.style.cssText=`
+    left:${startX}vw; top:-40px;
+    --dur:${dur}s; --delay:${delay}s;
+    --tx:${swayX}px; --rot0:${rot0}deg; --rot1:${rot1}deg;
+    --sc:${scale};
+  `;
+
+  document.body.appendChild(el);
+  setTimeout(()=>{ el.remove(); petalCount--; }, (dur+delay)*1000 + 500);
+}
+
+function startFallingPetals(){
+  if(petalsActive) return;
+  petalsActive = true;
+  // Initial burst
+  for(let i=0;i<8;i++) setTimeout(spawnPetal, i*200);
+  // Continuous shower
+  petalInterval = setInterval(()=>{
+    const n = 1 + Math.floor(Math.random()*3);
+    for(let i=0;i<n;i++) setTimeout(spawnPetal, i*180);
+  }, 900);
+}
 
 // ═══════════════════════════════════════
 // CONFETTI + FLOATIES
@@ -1050,6 +1939,7 @@ function onAllBloomed(){
   haptic([50,80,50,80,100,150,100]);
   launchConfetti(); setTimeout(launchConfetti,1800); setTimeout(launchConfetti,3600);
   startButterflies();
+  startFallingPetals();
   fullBloomSparkles(); setTimeout(fullBloomSparkles,2500); setTimeout(fullBloomSparkles,5000);
   const rect=gCv.getBoundingClientRect();
   for(let i=0;i<8;i++) setTimeout(()=>spawnGlowRing(rect.left+Math.random()*rect.width,rect.top+Math.random()*rect.height),i*400);
