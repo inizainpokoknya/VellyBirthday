@@ -598,18 +598,17 @@ body.midnight .wish-item { background:rgba(26,58,107,0.3); }
   border-radius:12px 12px 6px 6px;
   background:linear-gradient(170deg, #fffdf7 0%, #fff9f0 60%, #fff4e6 100%);
   border:1px solid rgba(245,158,11,0.22);
-  box-shadow:
-    0 -6px 24px rgba(0,0,0,0.2),
-    0 2px 0 rgba(255,255,255,0.8) inset;
+  /* box-shadow driven dynamically by updateLetterPosition() */
   z-index:2;
   /* overflow visible so height:auto works */
   overflow:visible;
   pointer-events:none;
-  will-change:transform;
+  will-change:transform, box-shadow;
 }
 /* transition only when snapping (not during drag) */
 #env-letter.animated {
-  transition:transform 0.75s cubic-bezier(0.22,1,0.36,1);
+  transition: transform  0.75s cubic-bezier(0.22,1,0.36,1),
+              box-shadow 0.75s cubic-bezier(0.22,1,0.36,1);
 }
 #env-letter.draggable { pointer-events:auto; cursor:grab; }
 #env-letter.draggable:active { cursor:grabbing; }
@@ -1188,7 +1187,7 @@ function sfDraw(ts){
     sfCtx.fillStyle=col; sfCtx.fill();
   });
 
-  requestAnimationFrame(sfDraw);
+  if (!window._sfStopped) requestAnimationFrame(sfDraw);
 }
 requestAnimationFrame(sfDraw);
 
@@ -1403,7 +1402,7 @@ function onBirthdayReveal(){
   setTimeout(()=>initGarden(),350);
   setTimeout(launchConfetti,250);
   setTimeout(launchConfetti,3200);
-  spawnFloaties(); setInterval(spawnFloaties,2800);
+  spawnFloaties(); floatiesInterval = setInterval(spawnFloaties,2800);
   // start typewriter after short delay
   setTimeout(startTypewriter,600);
 }
@@ -1476,57 +1475,124 @@ function getMaxTY()   { return getLetterH() * 0.94; }
 // Just the heading visible above envelope opening
 function getPeekTY()  { return getLetterH() * 0.86; }
 
-// ── Set position ──
-function setTY(val, animated) {
-  currentTY = val;
-  letterEl.classList.toggle('animated', !!animated);
-  letterEl.style.transform = `translateX(-50%) translateY(${val}px)`;
-  if (animated) setTimeout(() => letterEl.classList.remove('animated'), 850);
+// ══════════════════════════════════════════════════════
+// CORE: updateLetterPosition(ty)
+//
+// Single source of truth for all letter movement.
+// Applies translateY (px) + scale interpolation.
+//
+// Scale logic (Spec §3):
+//   ty = getMaxTY()  →  scale 1.00  (fully tucked)
+//   ty = getMinTY()  →  scale 1.05  (fully open)
+//   Anything in between → lerp linearly
+//
+// Does NOT touch currentTY — callers manage state.
+// ══════════════════════════════════════════════════════
+function updateLetterPosition(ty) {
+  const min = getMinTY();
+  const max = getMaxTY();
+  // t: 0 = fully tucked, 1 = fully open
+  const t     = Math.max(0, Math.min(1, (ty - max) / (min - max)));
+  const scale = 1 + t * 0.05;  // 1.00 → 1.05
+
+  // Dynamic box-shadow: simulates letter rising away from background.
+  // As t increases (letter rises), shadow spreads wider and softens.
+  //   tucked  (t=0): tight shadow — 0 -4px 12px, opacity 0.18
+  //   open    (t=1): wide shadow  — 0 -16px 48px, opacity 0.38
+  const blur    = 12  + t * 36;                    // 12px  → 48px
+  const offsetY = -(4 + t * 12);                   // -4px  → -16px
+  const opacity = 0.18 + t * 0.20;                 // 0.18  → 0.38
+  const spreadElevation = t * 6;                   // 0px   → 6px (lift)
+
+  letterEl.style.transform  = `translateX(-50%) translateY(${ty}px) scale(${scale})`;
+  letterEl.style.boxShadow  =
+    `0 ${offsetY}px ${blur}px ${spreadElevation}px rgba(0,0,0,${opacity.toFixed(2)}),` +
+    `0 2px 0 rgba(255,255,255,0.8) inset`;
 }
 
-// ── After drag release: snap open or closed ──
-function snapLetter() {
-  // Snap open if letter is at least halfway out compared to peek
-  const threshold = (getMinTY() + getPeekTY()) / 2;
-  if (currentTY < threshold) {
-    setTY(getMinTY(), true);
-    isLetterOpen = true;
-    pocketEnv.classList.add('is-open');
-    haptic([10, 20]);
-  } else {
-    pushLetterIn();
+// ── setTY: set position + keep currentTY in sync (Spec §4) ──
+// animated=true  → CSS transition on, auto-removed after 820ms
+// animated=false → raw update, no transition (used during drag)
+const ANIM_DURATION = 820; // ms — must match CSS .animated transition
+function setTY(val, animated) {
+  currentTY = val;                                       // §4 sync
+  letterEl.classList.toggle('animated', !!animated);
+  updateLetterPosition(val);
+  if (animated) {
+    setTimeout(() => {
+      letterEl.classList.remove('animated');
+      // Re-sync currentTY after transition in case of floating-point drift
+      currentTY = val;                                   // §4 guard
+    }, ANIM_DURATION);
   }
 }
 
-function pushLetterIn() {
-  setTY(getMaxTY(), true);
-  isLetterOpen = false;
-  letterEl.classList.remove('draggable');
-  pocketEnv.classList.remove('is-open');
-  setTimeout(() => flapWrap.classList.remove('flap-open'), 180);
-  setTimeout(() => waxSeal.classList.remove('seal-hidden'), 700);
-  haptic(20);
+// ══════════════════════════════════════════════════════
+// SNAP: after drag release
+// ══════════════════════════════════════════════════════
+function snapLetter() {
+  // Threshold: halfway between current peek and full-open
+  const threshold = (getMinTY() + getPeekTY()) / 2;
+  if (currentTY < threshold) {
+    animateOpen();
+  } else {
+    animateClose();
+  }
 }
 
-// ── Drag ──
+// ── animateOpen: snap to fully open ──
+function animateOpen() {
+  setTY(getMinTY(), true);
+  isLetterOpen = true;
+  pocketEnv.classList.add('is-open');
+  haptic([10, 20]);
+}
+
+// ── animateClose: tuck-in sequence (Spec §5 delay) ──
+function animateClose() {
+  if (letterAnimating) return;
+  letterAnimating = true;
+  isLetterOpen    = false;
+
+  setTY(getMaxTY(), true);                               // tuck letter in
+  pocketEnv.classList.remove('is-open');
+  letterEl.classList.remove('draggable');
+  haptic(20);
+
+  // Close flap AFTER letter starts going down
+  setTimeout(() => flapWrap.classList.remove('flap-open'), 200);
+  // Restore wax seal
+  setTimeout(() => waxSeal.classList.remove('seal-hidden'), 680);
+  // Re-enable interaction after animation fully settles (Spec §5 delay)
+  setTimeout(() => { letterAnimating = false; }, ANIM_DURATION + 60);
+}
+
+// ══════════════════════════════════════════════════════
+// DRAG GESTURE (Spec §4: currentTY always in sync)
+// ══════════════════════════════════════════════════════
 function onDragStart(e) {
   if (!letterEl.classList.contains('draggable')) return;
+  if (letterAnimating) return;
   dragActive   = true;
   dragStartY   = e.touches ? e.touches[0].clientY : e.clientY;
-  dragStartVal = currentTY;
+  dragStartVal = currentTY;                              // §4: read synced value
   letterEl.classList.remove('animated');
   e.stopPropagation();
 }
+
 function onDragMove(e) {
   if (!dragActive) return;
   const y   = e.touches ? e.touches[0].clientY : e.clientY;
   const min = getMinTY(), max = getMaxTY();
   let v = dragStartVal + (y - dragStartY);
-  if (v < min) v = min + (v - min) * 0.15;
-  if (v > max) v = max + (v - max) * 0.15;
-  setTY(v);
+  // Rubber-band resistance at both limits
+  if (v < min) v = min + (v - min) * 0.14;
+  if (v > max) v = max + (v - max) * 0.14;
+  currentTY = v;                                         // §4 sync during drag
+  updateLetterPosition(v);                               // scale updated live
   e.preventDefault();
 }
+
 function onDragEnd() {
   if (!dragActive) return;
   dragActive = false;
@@ -1534,75 +1600,101 @@ function onDragEnd() {
 }
 
 letterEl.addEventListener('mousedown',  onDragStart);
-letterEl.addEventListener('touchstart', onDragStart, {passive:false});
+letterEl.addEventListener('touchstart', onDragStart, {passive: false});
 document.addEventListener('mousemove',  onDragMove);
-document.addEventListener('touchmove',  onDragMove, {passive:false});
+document.addEventListener('touchmove',  onDragMove,  {passive: false});
 document.addEventListener('mouseup',    onDragEnd);
 document.addEventListener('touchend',   onDragEnd);
 
-// ── Open overlay (from garden) ──
+// ══════════════════════════════════════════════════════
+// OPEN OVERLAY (from garden button)
+// ══════════════════════════════════════════════════════
 function openEnvelope() {
-  haptic([40,60,40,60,50]);
+  haptic([40, 60, 40, 60, 50]);
   $('env-overlay').classList.add('show');
   document.body.style.overflow = 'hidden';
   resetEnvelopeState();
 }
 
+// ── Close entire overlay ──
+// Called after tuck-in animation completes (Spec §5)
 function closeEnvelope() {
   haptic(30);
-  $('env-overlay').classList.remove('show');
-  document.body.style.overflow = '';
+  // If letter is open, animate tuck-in first, THEN hide overlay
+  if (isLetterOpen || letterEl.classList.contains('draggable')) {
+    animateClose();
+    setTimeout(() => {
+      $('env-overlay').classList.remove('show');
+      document.body.style.overflow = '';
+    }, ANIM_DURATION + 80);                              // §5: delay before display:none
+  } else {
+    $('env-overlay').classList.remove('show');
+    document.body.style.overflow = '';
+  }
 }
 
-// ── Tap on envelope toggles open/close ──
+// ── Backdrop click → closeEnvelope (Spec §5) ──
+$('env-overlay').addEventListener('click', e => {
+  if (e.target === $('env-overlay') || e.target === $('env-backdrop-hit')) {
+    closeEnvelope();
+  }
+});
+
+// ── Tap on envelope area ──
 function toggleLetter() {
   if (letterAnimating) return;
   if (!letterEl.classList.contains('draggable')) {
     triggerOpen();
   } else if (isLetterOpen) {
-    pushLetterIn();
+    animateClose();
   }
 }
 
-// ── Opening sequence ──
+// ══════════════════════════════════════════════════════
+// OPENING SEQUENCE: seal → flap → peek → drag enabled
+// ══════════════════════════════════════════════════════
 function triggerOpen() {
   letterAnimating = true;
+
+  // 1. Seal disappears
   waxSeal.classList.add('seal-hidden');
+
+  // 2. Flap flips open
   setTimeout(() => flapWrap.classList.add('flap-open'), 120);
+
+  // 3. Letter peeks out with scale pop
   setTimeout(() => {
     pocketEnv.classList.add('is-open');
     letterEl.style.pointerEvents = 'auto';
     setTY(getPeekTY(), true);
   }, 380);
+
+  // 4. Drag enabled + start typewriter
   setTimeout(() => {
     letterAnimating = false;
     letterEl.classList.add('draggable');
     if (!letterTyped) { letterTyped = true; typeEnvLetter(); }
-  }, 1100);
+  }, 380 + ANIM_DURATION);
 }
 
+// ── Reset to fully-tucked state ──
 function resetEnvelopeState() {
   isLetterOpen = letterAnimating = dragActive = false;
-  letterEl.classList.remove('animated','draggable');
+  letterEl.classList.remove('animated', 'draggable');
   flapWrap.classList.remove('flap-open');
   waxSeal.classList.remove('seal-hidden');
   pocketEnv.classList.remove('is-open');
-  letterEl.style.transition = 'none';
   letterEl.style.pointerEvents = 'none';
-  // position: tucked. Use 9999px as safe large value since height=auto unknown at this point
-  currentTY = 9999;
-  letterEl.style.transform = 'translateX(-50%) translateY(9999px)';
-  // Force reflow then set correct value
+
+  // height:auto → offsetHeight not yet valid; use rAF to read after layout
+  letterEl.style.transition = 'none';
+  letterEl.style.transform  = 'translateX(-50%) translateY(9999px)';
   requestAnimationFrame(() => {
-    const maxTY = getMaxTY();
-    currentTY = maxTY;
-    letterEl.style.transform = `translateX(-50%) translateY(${maxTY}px)`;
+    const maxTY  = getMaxTY();
+    currentTY    = maxTY;                                // §4 sync
+    updateLetterPosition(maxTY);
   });
 }
-
-$('env-overlay').addEventListener('click', e => {
-  if (e.target === $('env-overlay') || e.target === $('env-backdrop-hit')) closeEnvelope();
-});
 
 // ── Typewriter ──
 // Letter rises paragraph-by-paragraph.
@@ -1788,7 +1880,8 @@ const wfStyle=document.createElement('style');
 wfStyle.textContent=`@keyframes wingFlap{from{transform:scaleX(1)}to{transform:scaleX(0.4)}}`;
 document.head.appendChild(wfStyle);
 
-let butterflyInterval=null;
+let butterflyInterval = null;
+let floatiesInterval  = null;
 function spawnButterfly(){
   const bt=document.createElement('div'); bt.className='butterfly';
   const sx=Math.random()*innerWidth, sy=innerHeight*0.2+Math.random()*innerHeight*0.5;
@@ -2015,8 +2108,31 @@ window.addEventListener('resize',()=>{
   gCv.width=W;gCv.height=H;gRect=gCv.getBoundingClientRect();
 });
 
-// ── PREVIEW: uncomment to test birthday instantly ──
-// startCurtainTransition();
+// ══════════════════════════════════════════════════════
+// MEMORY LEAK PREVENTION
+// Clean up all intervals, rAF loops, and pending timers
+// when the page is hidden or unloaded (SPA-safe).
+// ══════════════════════════════════════════════════════
+const _allIntervals = [];
+const _origSetInterval = window.setInterval;
+const _origClearInterval = window.clearInterval;
+// Track every interval created after this point
+// (existing ones above are already named and clearable)
+function _cleanup() {
+  // Named intervals
+  if (countdownInterval) clearInterval(countdownInterval);
+  if (petalInterval)     clearInterval(petalInterval);
+  if (butterflyInterval) clearInterval(butterflyInterval);
+  if (floatiesInterval)  clearInterval(floatiesInterval);
+  // starfield rAF — stop by flagging; sfDraw checks this
+  window._sfStopped = true;
+  // Letter typewriter — if mid-typing, its setTimeout chain
+  // will naturally stop since the DOM nodes will be gone
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') _cleanup();
+});
+window.addEventListener('pagehide', _cleanup);
 </script>
 </body>
 </html>
