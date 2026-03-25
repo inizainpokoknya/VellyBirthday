@@ -785,7 +785,7 @@ body.midnight .wish-item { background:rgba(26,58,107,0.3); }
 /* ══════════════════════════════════════
    🖱️ CUSTOM HEART CURSOR (desktop only)
 ══════════════════════════════════════ */
-body.custom-cursor-active { cursor:none; }
+
 #custom-cursor {
   position:fixed; pointer-events:none; z-index:99999;
   width:22px; height:22px;
@@ -852,7 +852,7 @@ body.midnight #star-glow-canvas { opacity:1; }
   <div class="curtain-half"></div>
   <div class="curtain-half"></div>
 </div>
-<div id="curtain-label">✨ happy birthday lovellyy ✨</div>
+<div id="curtain-label">✨ happy birthday love ✨</div>
 
 <!-- ══════════════ VINYL RECORD PLAYER ══════════════ -->
 <div id="vinyl-player">
@@ -866,7 +866,8 @@ body.midnight #star-glow-canvas { opacity:1; }
 
         <!-- Album art label in center -->
         <div id="vinyl-label">
-          <img src="img/R-1113716-1341151450-3286.jpg" alt="George Benson" draggable="false">
+          <img src="img/elvis.jpg" alt="Elvis Presley" draggable="false"
+               onerror="this.style.display='none';this.parentElement.style.background='linear-gradient(135deg,#1d4ed8,#3b82f6)'">
         </div>
 
         <!-- Center spindle -->
@@ -904,8 +905,8 @@ body.midnight #star-glow-canvas { opacity:1; }
     <div id="vinyl-controls">
       <button id="vinyl-play-btn" onclick="toggleAudio()" aria-label="Play / Pause">▶</button>
       <div class="vinyl-track-info">
-        <span class="vinyl-song-title">Nothing's Gonna Change My Love</span>
-        <span class="vinyl-song-artist">George Benson</span>
+        <span class="vinyl-song-title">Cant Help Falling in Love</span>
+        <span class="vinyl-song-artist">Elvis Presley</span>
       </div>
     </div>
 
@@ -937,7 +938,8 @@ body.midnight #star-glow-canvas { opacity:1; }
 
 <!-- ══════════════ COUNTDOWN PAGE ══════════════ -->
 <div class="page active fade-in" id="countdown-page">
-  <div class="moon-icon" id="moonBtn" onclick="moonClick()">
+  <div class="moon-icon" id="moonBtn" onclick="moonClick()" role="button" tabindex="0" aria-label="Moon — click 3 times for a secret"
+       onkeydown="if(event.key==='Enter'||event.key===' ')moonClick()">
     🌙
     <span class="moon-hint">click 3x for a secret 🌙</span>
   </div>
@@ -949,7 +951,7 @@ body.midnight #star-glow-canvas { opacity:1; }
   <p class="top-label" style="margin-top:14px">✨ something special is coming ✨</p>
   <h1 class="title-main">vellycia's birthday</h1>
   <p class="title-sub">is almost here 💙</p>
-  <div class="countdown-grid">
+  <div class="countdown-grid" aria-live="polite" aria-label="Countdown timer" aria-atomic="false">
     <div class="count-box"><div class="count-num" id="cd-days">--</div><div class="count-label">days</div></div>
     <div class="count-box"><div class="count-num" id="cd-hours">--</div><div class="count-label">hours</div></div>
     <div class="count-box"><div class="count-num" id="cd-mins">--</div><div class="count-label">mins</div></div>
@@ -963,17 +965,18 @@ body.midnight #star-glow-canvas { opacity:1; }
   <div class="bday-header">
     <div class="bday-emoji-row"><span>🎂</span><span>💙</span><span>🎉</span><span>✨</span><span>🌸</span></div>
     <h1 class="bday-title">happy birthday</h1>
-    <div class="bday-name">vellycia!! 🎀</div>
+    <div class="bday-name">sayangg!! 🎀</div>
   </div>
 
   <!-- GARDEN -->
   <div class="garden-section" id="gardenSection">
     <div class="indicators" id="indicators"></div>
-    <div class="garden-canvas-wrap" id="gardenWrap">
-      <canvas id="gardenCanvas"></canvas>
+    <div class="garden-canvas-wrap" id="gardenWrap"
+         role="application" aria-label="Interactive rose garden — click or touch and drag to water the roses">
+      <canvas id="gardenCanvas" aria-hidden="true"></canvas>
     </div>
     <p class="garden-hint" id="gardenHint">🚿 siram rosesnya plis! klik / sentuh & gerakkan</p>
-    <div class="celebration-banner" id="celebBanner">
+    <div class="celebration-banner" id="celebBanner" role="status" aria-live="polite">
       <div class="cel-title">All 100 roses are in full bloom! 🌹✨</div>
       <p style="font-family:'Caveat',cursive;font-size:clamp(0.95rem,2.5vw,1.1rem);color:#1d4ed8;transition:color var(--transition-dur)" id="celebSubText">
         like u — pretty, sweet, dan gorgeous 💙
@@ -1014,7 +1017,7 @@ body.midnight #star-glow-canvas { opacity:1; }
 
   <!-- MESSAGE CARD -->
   <div class="bday-card">
-    <p class="bday-message" id="bdayMsg"></p>
+    <p class="bday-message" id="bdayMsg" aria-live="polite" aria-label="Birthday message"></p>
     <div class="divider"></div>
     <div class="wishes-grid">
       <div class="wish-item"><span class="wi-emoji">💙</span><div class="wi-text">endless love & warmth</div></div>
@@ -1023,7 +1026,7 @@ body.midnight #star-glow-canvas { opacity:1; }
       <div class="wish-item"><span class="wi-emoji">🌹</span><div class="wi-text">blooming every single day</div></div>
     </div>
     <div class="divider"></div>
-    <p class="bday-footer">selamat ulang tahun, vel 🎀<br>semoga semuanya indah hari ini 💙</p>
+    <p class="bday-footer">happy birthday, sayang 🎀<br>semoga semuanya indah hari ini 💙</p>
   </div>
 </div>
 
@@ -1041,16 +1044,16 @@ body.midnight #star-glow-canvas { opacity:1; }
 
     <!-- LAYER 1: Envelope Back -->
     <div id="env-back">
-      <div class="env-back-from">to: vellycia 🌹<br>with love 💙</div>
+      <div class="env-back-from">to: my love 🌹<br>with love 💙</div>
       <div class="env-back-stamp">🌹</div>
-      <div class="env-back-to">vellycia 💙</div>
+      <div class="env-back-to">vellycia callista souw 💙</div>
     </div>
 
     <!-- LAYER 2: Letter Paper (slides up/down) -->
     <div id="env-letter">
       <div id="env-drag-handle"></div>
       <div id="env-letter-inner">
-        <div class="env-letter-heading">✦ a letter for u, vell ✦</div>
+        <div class="env-letter-heading">✦ a letter for u, love ✦</div>
         <div class="env-letter-body" id="envLetterBody"></div>
         <div class="env-letter-sign"  id="envLetterSign"></div>
         <div class="env-scroll-hint" id="envScrollHint">scroll to read ↓</div>
@@ -1200,25 +1203,48 @@ let trailTimer = null;
 if(!isMobile){
   document.body.classList.add('custom-cursor-active');
 
-  document.addEventListener('mousemove', e=>{
-    cursorEl.style.left = e.clientX+'px';
-    cursorEl.style.top  = e.clientY+'px';
+  // ── Cursor trail: object-pool (max 30 nodes) ──
+  // Pre-allocate nodes once; recycle them to avoid unbounded DOM growth.
+  const TRAIL_POOL_SIZE = 30;
+  const trailPool = Array.from({length: TRAIL_POOL_SIZE}, () => {
+    const n = document.createElement('div');
+    n.className = 'cursor-trail';
+    n.style.display = 'none';
+    document.body.appendChild(n);
+    return { el: n, free: true };
+  });
+  const trailColors = ['#f9a8d4','#93c5fd','#c4b5fd','#fbbf24','#6ee7b7'];
 
-    // Spawn trail particles (throttled)
-    if(!trailTimer){
-      trailTimer=setTimeout(()=>{
-        const t=document.createElement('div');
-        t.className='cursor-trail';
-        const sz=4+Math.random()*5;
-        const trailColors=['#f9a8d4','#93c5fd','#c4b5fd','#fbbf24','#6ee7b7'];
-        t.style.cssText=`left:${e.clientX}px;top:${e.clientY}px;
-          width:${sz}px;height:${sz}px;
-          background:${trailColors[Math.floor(Math.random()*trailColors.length)]};
-          transform:translate(-50%,-50%);`;
-        document.body.appendChild(t);
-        setTimeout(()=>t.remove(), 600);
-        trailTimer=null;
-      },30);
+  function acquireTrail() {
+    return trailPool.find(p => p.free) || null; // returns null if all busy (safe skip)
+  }
+
+  document.addEventListener('mousemove', e => {
+    cursorEl.style.left = e.clientX + 'px';
+    cursorEl.style.top  = e.clientY + 'px';
+
+    // Throttle: one trail particle every 30ms
+    if (!trailTimer) {
+      trailTimer = setTimeout(() => {
+        trailTimer = null;
+        const slot = acquireTrail();
+        if (!slot) return;           // pool exhausted — skip gracefully
+        slot.free = false;
+        const sz = 4 + Math.random() * 5;
+        slot.el.style.cssText =
+          `display:block;left:${e.clientX}px;top:${e.clientY}px;` +
+          `width:${sz}px;height:${sz}px;` +
+          `background:${trailColors[Math.floor(Math.random() * trailColors.length)]};` +
+          `transform:translate(-50%,-50%);`;
+        // Re-trigger animation by forcing reflow
+        slot.el.style.animation = 'none';
+        void slot.el.offsetWidth;
+        slot.el.style.animation = '';
+        setTimeout(() => {
+          slot.el.style.display = 'none';
+          slot.free = true;          // return to pool
+        }, 600);
+      }, 30);
     }
   });
 }
@@ -1228,9 +1254,20 @@ if(!isMobile){
 // Syncs disc rotation, tonearm, & notes
 // with the Web Audio API playback state.
 // ═══════════════════════════════════════
-const audio = new Audio('audio/George Benson - Nothings Gonna Change My Love For You (Official Audio).mp3');
+const audio = new Audio('audio/elvis.mp3');
 audio.loop = true;
 audio.volume = 0.45;
+
+// ── Graceful fallback: if audio file fails to load, disable player UI ──
+audio.addEventListener('error', () => {
+  console.warn('[vinyl] Audio file could not be loaded — player disabled.');
+  vinylPlayBtn.disabled    = true;
+  vinylPlayBtn.title       = 'Audio tidak tersedia';
+  vinylPlayBtn.style.opacity = '0.35';
+  vinylPlayBtn.style.cursor  = 'not-allowed';
+  document.querySelector('.vinyl-song-title').textContent  = 'Audio unavailable';
+  document.querySelector('.vinyl-song-artist').textContent = '';
+});
 
 let audioPlaying = false;
 let audioStarted  = false;
@@ -1403,14 +1440,13 @@ function onBirthdayReveal(){
   setTimeout(launchConfetti,250);
   setTimeout(launchConfetti,3200);
   spawnFloaties(); floatiesInterval = setInterval(spawnFloaties,2800);
-  // start typewriter after short delay
   setTimeout(startTypewriter,600);
 }
 
 // ═══════════════════════════════════════
 // ⌨️ TYPEWRITER EFFECT
 // ═══════════════════════════════════════
-const fullMessage=`today is ur day, vel 💙\nu deserve all the happiness,\nall the love, all the good things\nthis world has to offer 🌙\n\nthank u for being u — the world is\nso much better with u in it ✨`;
+const fullMessage=`today is ur day, sayang 💙\nu deserve all the happiness,\nall the love, all the good things\nthis world has to offer 🌙\n\nthank u for being u — the world is\nso much better with u in it ✨`;
 
 function startTypewriter(){
   const el=$('bdayMsg');
@@ -1449,7 +1485,7 @@ function startTypewriter(){
 // Letter height = auto (grows with content).
 // Drag limits recalculated AFTER typing finishes.
 // ═══════════════════════════════════════
-const letterContent = `bocill,\nhave watered 100 roses.\nthats no coincidence — thats u.\nu are the one who is attentive, patient, and never gives up.\n\ntoday, 9 april, i want to say something that i might have never said directly:\n\nthanks for existing. truly.\nnot cz u're perfect (but ik u = perfect) — but precisely because u are u. with all ur exhaustion, all ur cries, and all ur "i can't do this anymore" moments.\n\nu strong without realizing it, velly. and that's one of the most beautiful things i've ever seen.\n\ni love how u care so deeply about the people around u, even when ur own cup is empty. that says a lot about who u are.\n\nhappy birthday. i hope this year is much lighter, much happier, and full of things that make u smile for no reason yaa.\n\nu deserve it all. every single bit of it. 💙`;
+const letterContent = `velly,\nhave watered 100 roses.\nthats no coincidence — thats u.\nu are the one who is attentive, patient, and never gives up.\n\ntoday, 9 april, i want to say something that i might have never said directly:\n\nthanks for existing. truly.\nnot cz u're perfect (but ik u = perfect) — but precisely because u are u. with all ur exhaustion, all ur cries, and all ur "i can't do this anymore" moments.\n\nu strong without realizing it, sayang. and that's one of the most beautiful things i've ever seen.\n\ni love how u care so deeply about the people around u, even when ur own cup is empty. that says a lot about who u are.\n\nhappy birthday. i hope this year is much lighter, much happier, and full of things that make u smile for no reason yaa.\n\nu deserve it all. every single bit of it.\n\ni know its not gonna be easy. its going to be really hard, and were gonna have to work at this every day. but i want to do that because i want u—all of u, forever, every day. just u and me. because at the end of the day, it was always u. even when it wasnt, it was.💙`;
 
 let isLetterOpen    = false;
 let letterAnimating = false;
@@ -1568,43 +1604,42 @@ function animateClose() {
 }
 
 // ══════════════════════════════════════════════════════
-// DRAG GESTURE (Spec §4: currentTY always in sync)
+// DRAG GESTURE — Pointer Events API
+// onDragEnd is shared by pointerup + pointercancel
 // ══════════════════════════════════════════════════════
-function onDragStart(e) {
-  if (!letterEl.classList.contains('draggable')) return;
-  if (letterAnimating) return;
-  dragActive   = true;
-  dragStartY   = e.touches ? e.touches[0].clientY : e.clientY;
-  dragStartVal = currentTY;                              // §4: read synced value
-  letterEl.classList.remove('animated');
-  e.stopPropagation();
-}
-
-function onDragMove(e) {
-  if (!dragActive) return;
-  const y   = e.touches ? e.touches[0].clientY : e.clientY;
-  const min = getMinTY(), max = getMaxTY();
-  let v = dragStartVal + (y - dragStartY);
-  // Rubber-band resistance at both limits
-  if (v < min) v = min + (v - min) * 0.14;
-  if (v > max) v = max + (v - max) * 0.14;
-  currentTY = v;                                         // §4 sync during drag
-  updateLetterPosition(v);                               // scale updated live
-  e.preventDefault();
-}
-
 function onDragEnd() {
   if (!dragActive) return;
   dragActive = false;
   snapLetter();
 }
 
-letterEl.addEventListener('mousedown',  onDragStart);
-letterEl.addEventListener('touchstart', onDragStart, {passive: false});
-document.addEventListener('mousemove',  onDragMove);
-document.addEventListener('touchmove',  onDragMove,  {passive: false});
-document.addEventListener('mouseup',    onDragEnd);
-document.addEventListener('touchend',   onDragEnd);
+// ── Pointer Events API — unified mouse / touch / Apple Pencil / stylus ──
+// Using setPointerCapture so drag stays active even if pointer leaves letterEl.
+letterEl.addEventListener('pointerdown', e => {
+  if (!letterEl.classList.contains('draggable')) return;
+  if (letterAnimating) return;
+  letterEl.setPointerCapture(e.pointerId);  // capture: drag never "escapes"
+  dragActive   = true;
+  dragStartY   = e.clientY;
+  dragStartVal = currentTY;
+  letterEl.classList.remove('animated');
+  e.stopPropagation();
+  e.preventDefault();
+}, {passive: false});
+
+letterEl.addEventListener('pointermove', e => {
+  if (!dragActive) return;
+  const min = getMinTY(), max = getMaxTY();
+  let v = dragStartVal + (e.clientY - dragStartY);
+  if (v < min) v = min + (v - min) * 0.14;  // rubber-band top
+  if (v > max) v = max + (v - max) * 0.14;  // rubber-band bottom
+  currentTY = v;
+  updateLetterPosition(v);
+  e.preventDefault();
+}, {passive: false});
+
+letterEl.addEventListener('pointerup',     onDragEnd);
+letterEl.addEventListener('pointercancel', onDragEnd);
 
 // ══════════════════════════════════════════════════════
 // OPEN OVERLAY (from garden button)
@@ -1724,7 +1759,7 @@ function typeEnvLetter() {
   function typeNextParagraph() {
     if (pIdx >= total) {
       // Sign-off
-      const signText = '— someone who cares about you 💙';
+      const signText = '— deine liebe💙';
       let si = 0;
       const iv = setInterval(() => {
         signEl.textContent += signText[si++];
@@ -1993,16 +2028,33 @@ function initGarden(){
 }
 
 function setupInput(){
-  gWrap.addEventListener('mouseenter',()=>wCan.style.opacity='1');
-  gWrap.addEventListener('mouseleave',()=>{isWatering=false;wCan.style.opacity='0';});
-  document.addEventListener('mousemove',e=>{curX=e.clientX;curY=e.clientY;posCan(e.clientX,e.clientY);});
-  gWrap.addEventListener('mousedown',()=>{isWatering=true;haptic(15);});
-  document.addEventListener('mouseup',()=>isWatering=false);
-  gWrap.addEventListener('touchstart',e=>{e.preventDefault();isWatering=true;wCan.style.opacity='1';handleTouch(e);haptic(15);},{passive:false});
-  gWrap.addEventListener('touchmove', e=>{e.preventDefault();handleTouch(e);},{passive:false});
-  gWrap.addEventListener('touchend', ()=>isWatering=false);
+  // ── Pointer Events API: unified mouse / touch / stylus (Apple Pencil) ──
+  // pointerenter / pointerleave handle cursor visibility for mouse only
+  gWrap.addEventListener('pointerenter', e => {
+    if (e.pointerType === 'mouse') wCan.style.opacity = '1';
+  });
+  gWrap.addEventListener('pointerleave', e => {
+    if (e.pointerType === 'mouse') { isWatering = false; wCan.style.opacity = '0'; }
+  });
+  // pointerdown — start watering on any input type
+  gWrap.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    gWrap.setPointerCapture(e.pointerId);
+    isWatering = true;
+    curX = e.clientX; curY = e.clientY;
+    posCan(e.clientX, e.clientY);
+    if (e.pointerType !== 'mouse') wCan.style.opacity = '1';
+    haptic(15);
+  }, {passive: false});
+  // pointermove — move watering can
+  gWrap.addEventListener('pointermove', e => {
+    curX = e.clientX; curY = e.clientY;
+    posCan(e.clientX, e.clientY);
+  });
+  // pointerup / pointercancel — stop watering
+  gWrap.addEventListener('pointerup',     () => { isWatering = false; });
+  gWrap.addEventListener('pointercancel', () => { isWatering = false; });
 }
-function handleTouch(e){const t=e.touches[0];curX=t.clientX;curY=t.clientY;posCan(t.clientX,t.clientY);}
 function posCan(cx,cy){wCan.style.left=(cx-66)+'px';wCan.style.top=(cy-40)+'px';}
 function toGCanvas(sx,sy){
   gRect=gCv.getBoundingClientRect();
@@ -2083,7 +2135,8 @@ function gardenLoop(){
     if(nb===TOTAL&&!allBloomed){allBloomed=true;onAllBloomed();}
   }
   if(isWatering&&!allBloomed){const p=toGCanvas(curX,curY);gCtx.save();for(let i=0;i<3;i++){gCtx.globalAlpha=.45-i*.12;gCtx.fillStyle='rgba(96,165,250,0.6)';gCtx.beginPath();gCtx.arc(p.x+(Math.random()-.5)*4,p.y-8+i*5,1.8-i*.3,0,Math.PI*2);gCtx.fill();}gCtx.restore();}
-  requestAnimationFrame(gardenLoop);
+  // Stop loop when tab hidden (memory / CPU saving — mirrors sfDraw pattern)
+  if (!window._gardenStopped) requestAnimationFrame(gardenLoop);
 }
 
 function onAllBloomed(){
@@ -2124,13 +2177,27 @@ function _cleanup() {
   if (petalInterval)     clearInterval(petalInterval);
   if (butterflyInterval) clearInterval(butterflyInterval);
   if (floatiesInterval)  clearInterval(floatiesInterval);
-  // starfield rAF — stop by flagging; sfDraw checks this
-  window._sfStopped = true;
-  // Letter typewriter — if mid-typing, its setTimeout chain
-  // will naturally stop since the DOM nodes will be gone
+  // Stop rAF loops by flag
+  window._sfStopped     = true;
+  window._gardenStopped = true;   // gardenLoop now respects this flag
+  // Letter typewriter — setTimeout chain will stop naturally (DOM nodes intact)
 }
+
+// Resume rAF loops when tab becomes visible again
+function _resume() {
+  if (window._sfStopped) {
+    window._sfStopped = false;
+    requestAnimationFrame(sfDraw);
+  }
+  if (window._gardenStopped && gInited) {
+    window._gardenStopped = false;
+    requestAnimationFrame(gardenLoop);
+  }
+}
+
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') _cleanup();
+  else _resume();
 });
 window.addEventListener('pagehide', _cleanup);
 </script>
