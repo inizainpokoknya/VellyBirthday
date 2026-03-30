@@ -69,7 +69,6 @@ canvas#starfield { position:fixed; inset:0; z-index:1; pointer-events:none; }
 #curtain.opening .curtain-half:last-child { animation-delay:0.15s; }
 @keyframes curtainClose { from{transform:scaleY(0)} to{transform:scaleY(1)} }
 @keyframes curtainOpen  { from{transform:scaleY(1)} to{transform:scaleY(0)} }
-.curtain-half:last-child { transform-origin:bottom center; }
 #curtain-label {
   position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
   z-index:9001; pointer-events:none; opacity:0;
@@ -1125,20 +1124,35 @@ if(!isMobile){
 // ═══════════════════════════════════════
 const sfCv=$('starfield'), sfCtx=sfCv.getContext('2d');
 const sgCv=$('star-glow-canvas'), sgCtx=sgCv.getContext('2d');
+// _sfReady guards sfStars access inside sfResize.
+// Canvas default HTML width = 300px (not 0), so the first sfResize()
+// call computes sx = innerWidth/300 ≠ 1 and would hit sfStars while it
+// is still in the Temporal Dead Zone → ReferenceError.
+// Flag flips true only after sfStars is fully populated below.
+let _sfReady = false;
+
 function sfResize(){
-  sfCv.width=innerWidth; sfCv.height=innerHeight;
-  sgCv.width=innerWidth; sgCv.height=innerHeight;
+  // ── PILAR III: Rescale star home-positions proportionally so stars never
+  //    drift off-screen after a window resize (bug: ox/oy stored old coords).
+  const prevW = sfCv.width, prevH = sfCv.height;
+  sfCv.width = sgCv.width  = innerWidth;
+  sfCv.height = sgCv.height = innerHeight;
+  if(_sfReady && (prevW !== innerWidth || prevH !== innerHeight)){
+    const sx = innerWidth / prevW, sy = innerHeight / prevH;
+    sfStars.forEach(s => { s.x = s.ox = s.ox * sx; s.y = s.oy = s.oy * sy; });
+  }
 }
 sfResize(); window.addEventListener('resize',sfResize);
 
 const sfStars=Array.from({length:isMobile?70:130},()=>({
   x:Math.random()*innerWidth, y:Math.random()*innerHeight,
-  ox:0, oy:0, // original positions set below
+  ox:0, oy:0,
   r:Math.random()*2.2+0.4, phase:Math.random()*Math.PI*2, speed:0.003+Math.random()*0.007,
-  glowR:0, // extra glow radius from cursor proximity
+  glowR:0,
 }));
-// store originals
+// store originals, then mark array as safe for resize rescaling
 sfStars.forEach(s=>{s.ox=s.x; s.oy=s.y;});
+_sfReady = true;
 
 let sfMouseX=-9999, sfMouseY=-9999;
 // Track cursor for star interactions
@@ -2024,7 +2038,7 @@ function initGarden(){
       });
     }
   }
-  setupInput(); wCan.style.display='block'; gardenLoop();
+  setupInput(); wCan.style.display='block'; requestAnimationFrame(gardenLoop);
 }
 
 function setupInput(){
@@ -2104,7 +2118,17 @@ function drawRose(ctx,x,y,g,maxH,rObj){
   }
 }
 
-function gardenLoop(){
+// ── PILAR II: Timestamp tracker for frame-rate independence ──
+// Decouples all physics from display Hz (60 / 90 / 120 Hz screens).
+let _lastGardenTs = 0;
+
+function gardenLoop(ts){
+  // ── PILAR II: Normalize Δt to a 60 fps baseline.
+  //    dt = 1.0 at 60 Hz, ~0.5 at 120 Hz, ~2.0 at 30 Hz.
+  //    Cap at 3× (180 ms) to prevent spiral-of-death after tab wake.
+  const dt = _lastGardenTs === 0 ? 1 : Math.min((ts - _lastGardenTs) / 16.667, 3);
+  _lastGardenTs = ts;
+
   const W=gCv.width, H=gCv.height, groundY=H-H*.06;
   gCtx.clearRect(0,0,W,H);
   const sky=gCtx.createLinearGradient(0,0,0,H);
@@ -2118,18 +2142,54 @@ function gardenLoop(){
   gCtx.fillStyle=gr;gCtx.fillRect(0,groundY,W,H-groundY);
   gCtx.strokeStyle='rgba(74,222,128,0.5)';gCtx.lineWidth=1.5;gCtx.beginPath();gCtx.moveTo(0,groundY);gCtx.lineTo(W,groundY);gCtx.stroke();
   if(isWatering&&!allBloomed){dropTimer++;if(dropTimer%3===0)spawnDrop();}
-  drops=drops.filter(d=>{
-    if(!d.alive)return false;
-    d.x+=d.vx;d.y+=d.vy;d.vy+=0.18;
-    roses.forEach(r=>{if(!r.growing&&d.alive&&Math.hypot(d.x-r.x,d.y-r.y)<16){r.growing=true;d.alive=false;addSplash(d.x,d.y);}});
-    if(d.y>groundY+8){d.alive=false;addSplash(d.x,groundY);return false;}
-    if(!d.alive)return false;
+
+  // ══════════════════════════════════════════════════════════════════
+  // PILAR I  — Squared-distance collision (eliminates sqrt per check).
+  //            16px radius → 16² = 256. O(n·m) but sqrt-free.
+  // PILAR II — Physics scaled by dt: identical behaviour on any Hz.
+  // PILAR III— In-place swap replaces Array.filter() to eliminate
+  //            heap allocation (≥120 new arrays / second at 60 fps).
+  // ══════════════════════════════════════════════════════════════════
+  let di = 0;
+  for(let i = 0; i < drops.length; i++){
+    const d = drops[i];
+    if(!d.alive) continue;
+    d.x  += d.vx * dt;
+    d.y  += d.vy * dt;
+    d.vy += 0.18 * dt;                            // gravity, dt-scaled
+    // ── PILAR I: squared-distance — no Math.hypot / no sqrt ──
+    for(let j = 0; j < roses.length; j++){
+      const r = roses[j];
+      if(r.growing || !d.alive) continue;
+      const ddx = d.x - r.x, ddy = d.y - r.y;
+      if(ddx*ddx + ddy*ddy < 256){               // 16² = 256
+        r.growing = true; d.alive = false; addSplash(d.x, d.y);
+      }
+    }
+    if(d.y > groundY + 8){ d.alive = false; addSplash(d.x, groundY); continue; }
+    if(!d.alive) continue;
     gCtx.save();gCtx.globalAlpha=d.alpha;gCtx.fillStyle='rgba(96,165,250,0.85)';gCtx.beginPath();gCtx.arc(d.x,d.y,d.r,0,Math.PI*2);gCtx.fill();gCtx.fillStyle='rgba(219,234,254,0.7)';gCtx.beginPath();gCtx.arc(d.x-d.r*.3,d.y-d.r*.3,d.r*.35,0,Math.PI*2);gCtx.fill();gCtx.restore();
-    return true;
-  });
-  splashes=splashes.filter(s=>{s.x+=s.vx;s.y+=s.vy;s.vy+=0.1;s.alpha-=0.055;if(s.alpha<=0)return false;gCtx.globalAlpha=s.alpha;gCtx.fillStyle='rgba(147,197,253,0.8)';gCtx.beginPath();gCtx.arc(s.x,s.y,s.r,0,Math.PI*2);gCtx.fill();gCtx.globalAlpha=1;return true;});
+    drops[di++] = d;                               // keep alive drop in-place
+  }
+  drops.length = di;                              // truncate — zero realloc
+
+  // ── Splashes: same in-place swap pattern ──
+  let si = 0;
+  for(let i = 0; i < splashes.length; i++){
+    const s = splashes[i];
+    s.x    += s.vx * dt;
+    s.y    += s.vy * dt;
+    s.vy   += 0.10 * dt;
+    s.alpha -= 0.055 * dt;
+    if(s.alpha <= 0) continue;
+    gCtx.globalAlpha=s.alpha;gCtx.fillStyle='rgba(147,197,253,0.8)';gCtx.beginPath();gCtx.arc(s.x,s.y,s.r,0,Math.PI*2);gCtx.fill();gCtx.globalAlpha=1;
+    splashes[si++] = s;
+  }
+  splashes.length = si;
+
   let nb=0;
-  [...roses].sort((a,b)=>a.y-b.y).forEach(r=>{if(r.growing&&r.growth<1)r.growth=Math.min(1,r.growth+r.growSpeed);if(r.growth>=1)r.bloomed=true;if(r.bloomed)nb++;drawRose(gCtx,r.x,r.y,r.growth,r.maxH,r);});
+  // ── PILAR II: growSpeed also dt-scaled so roses bloom at identical real-time speed ──
+  [...roses].sort((a,b)=>a.y-b.y).forEach(r=>{if(r.growing&&r.growth<1)r.growth=Math.min(1,r.growth+r.growSpeed*dt);if(r.growth>=1)r.bloomed=true;if(r.bloomed)nb++;drawRose(gCtx,r.x,r.y,r.growth,r.maxH,r);});
   if(nb!==bloomedCount){
     updateIndicators(nb);
     if(nb===TOTAL&&!allBloomed){allBloomed=true;onAllBloomed();}
@@ -2166,11 +2226,6 @@ window.addEventListener('resize',()=>{
 // Clean up all intervals, rAF loops, and pending timers
 // when the page is hidden or unloaded (SPA-safe).
 // ══════════════════════════════════════════════════════
-const _allIntervals = [];
-const _origSetInterval = window.setInterval;
-const _origClearInterval = window.clearInterval;
-// Track every interval created after this point
-// (existing ones above are already named and clearable)
 function _cleanup() {
   // Named intervals
   if (countdownInterval) clearInterval(countdownInterval);
@@ -2191,6 +2246,7 @@ function _resume() {
   }
   if (window._gardenStopped && gInited) {
     window._gardenStopped = false;
+    _lastGardenTs = 0;           // reset so dt doesn't spike after long pause
     requestAnimationFrame(gardenLoop);
   }
 }
